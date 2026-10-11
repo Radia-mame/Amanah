@@ -1,0 +1,5 @@
+.pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:320px;width:100%;margin-inline:auto}
+.pad button{min-height:64px;border-radius:18px;font-size:24px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.dots{display:flex;gap:14px;justify-content:center}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent);display:block}
+.dots i.on{background:var(--accent)}
