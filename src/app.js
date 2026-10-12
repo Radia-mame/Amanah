@@ -20,9 +20,9 @@ var extend=function(a,b){for(var k in b)if(Object.prototype.hasOwnProperty.call(
 var getPath=function(o,p){p=p.split('.');for(var i=0;i<p.length&&o!=null;i++)o=o[p[i]];return o;};
 
 /* ---------- data ---------- */
-function defaults(){return {lang:'en',mode:'auto',palette:'forest',textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
+function defaults(){return {lang:'en',mode:'dark',palette:'mono',ui:2,textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
 function emptyDb(){return {v:1,demo:false,settings:defaults(),people:[],loans:[],activity:[]};}
-function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
+function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){storageOK=false;toast(T('Could not save. Storage may be full (photos use a lot).'));}}
 function log(k,v){db.activity.push({id:uid(),ts:Date.now(),k:k,v:v||{}});if(db.activity.length>3000)db.activity.splice(0,db.activity.length-3000);}
 function seed(){
@@ -353,7 +353,7 @@ function loansCsv(){
 function restoreFrom(text){
   var o=null;try{o=JSON.parse(text);}catch(e){}
   if(!o||!Array.isArray(o.loans)||!Array.isArray(o.people))return showErr(T('That is not a valid backup.'));
-  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
+  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
 }
 document.addEventListener('click',function(e){
   var t=e.target;if(t.hasAttribute&&t.hasAttribute('data-scrim')){if(state.conf)state.conf=null;else state.sheet=null;render();return;}
@@ -382,4 +382,5 @@ applyTheme();
 try{history.replaceState({d:0},'');}catch(e){}
 try{var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){if(db.settings.mode==='auto'){applyTheme();render();}});}catch(e){}
 render();
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();});
 if(window.__SW__){try{if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}catch(e){}}

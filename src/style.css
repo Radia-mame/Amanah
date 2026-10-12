@@ -1,6 +1,6 @@
 /* Shop Stock styles. Colors come from CSS variables that the app sets from the chosen mode and palette. */
 :root{
-  --font:'Plus Jakarta Sans','Noto Sans Ethiopic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font:'Inter','Noto Sans Ethiopic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --bg:#F3F5F7; --surface:#FFFFFF; --ink:#0F1B2D; --muted:#566275; --line:#E1E6EC;
   --field-line:#8793A6; --accent:#0E7C66; --accent-ink:#FFFFFF; --accent-soft:#E2F3EE;
   --hero:#0F1B2D; --hero-ink:#FFFFFF; --hero-muted:#A9B6C6; --hero-line:#2B3A52;

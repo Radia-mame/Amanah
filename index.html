@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Amanah</title><meta name="theme-color" content="#F3F5F7">
+<title>Amanah</title><meta name="theme-color" content="#08090B">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Amanah">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700&display=swap">
 <style>
 /* Shop Stock styles. Colors come from CSS variables that the app sets from the chosen mode and palette. */
 :root{
-  --font:'Plus Jakarta Sans','Noto Sans Ethiopic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font:'Inter','Noto Sans Ethiopic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --bg:#F3F5F7; --surface:#FFFFFF; --ink:#0F1B2D; --muted:#566275; --line:#E1E6EC;
   --field-line:#8793A6; --accent:#0E7C66; --accent-ink:#FFFFFF; --accent-soft:#E2F3EE;
   --hero:#0F1B2D; --hero-ink:#FFFFFF; --hero-muted:#A9B6C6; --hero-line:#2B3A52;
@@ -194,6 +194,16 @@ button.hero{cursor:pointer}
 .dots{display:flex;gap:14px;justify-content:center}
 .dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent);display:block}
 .dots i.on{background:var(--accent)}
+/* v2 look: monochrome, Vercel/Linear base, Revolut numbers */
+body{background-image:linear-gradient(rgba(128,128,128,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(128,128,128,.07) 1px,transparent 1px);background-size:48px 48px}
+html[data-mode="dark"] body{background-color:#08090B}
+.hero{background:linear-gradient(160deg,#1A1C21,#0A0A0B)!important;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px rgba(0,0,0,.35);border-radius:22px}
+html:not([data-mode="dark"]) .hero{box-shadow:0 18px 40px rgba(0,0,0,.18)}
+.hero .big{font-size:34px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.hero .label{letter-spacing:.02em}
+h1,h2,h3{letter-spacing:-.025em}
+.card,.row,.item{border-radius:16px}
+.num{font-weight:600;letter-spacing:-.02em}
 
 </style></head><body>
 <div id="app"></div><div id="sheetRoot"></div><div id="confRoot"></div>
@@ -244,16 +254,17 @@ var I={
 
 /* ---------- themes: a mode (light or dark) plus a color palette ---------- */
 var MODES={
-  light:{'bg':'#F3F5F7','surface':'#FFFFFF','ink':'#0F1B2D','muted':'#566275','line':'#E1E6EC','field-line':'#8793A6','seg':'#E3E8EE','scrim':'rgba(15,27,45,.5)',
+  light:{'bg':'#F6F6F7','surface':'#FFFFFF','ink':'#0F1B2D','muted':'#566275','line':'#E1E6EC','field-line':'#8793A6','seg':'#E3E8EE','scrim':'rgba(15,27,45,.5)',
     'bad':'#B42318','bad-bg':'#FDE7E5','warn':'#7A4100','warn-bg':'#FFEBCF','good':'#0B6150','good-bg':'#E2F3EE',
     'gA-bg':'#0B6150','gA-fg':'#FFFFFF','gB-bg':'#BFE6DA','gB-fg':'#0B3D33','gC-bg':'#FFE3A3','gC-fg':'#5C3B00','gD-bg':'#F4B58A','gD-fg':'#4A2000','gE-bg':'#D5DAE1','gE-fg':'#243044',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'},
-  dark:{'bg':'#0B121C','surface':'#131D2B','ink':'#EAF0F7','muted':'#9AA8BB','line':'#243247','field-line':'#62748E','seg':'#1B2738','scrim':'rgba(0,0,0,.65)',
+  dark:{'bg':'#08090B','surface':'#101216','ink':'#F2F4F7','muted':'#8B93A1','line':'#23262C','field-line':'#5A616E','seg':'#1A1D22','scrim':'rgba(0,0,0,.65)',
     'bad':'#FF9A90','bad-bg':'#3A1C1C','warn':'#FFC46B','warn-bg':'#3A2A10','good':'#7FD6C0','good-bg':'#12342C',
     'gA-bg':'#3CC5A3','gA-fg':'#04231B','gB-bg':'#1F4A40','gB-fg':'#BFE6DA','gC-bg':'#4A3A12','gC-fg':'#FFE3A3','gD-bg':'#55301A','gD-fg':'#F4B58A','gE-bg':'#2A3547','gE-fg':'#C5CEDB',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'}
 };
 var PALETTES={
+  mono:{name:'Mono',light:{'accent':'#0A0A0B','accent-ink':'#FFFFFF','accent-soft':'#ECEDEF','hero':'#0A0A0B'},dark:{'accent':'#FFFFFF','accent-ink':'#08090B','accent-soft':'#1D2024','hero':'#15171B'}},
   teal:{name:'Teal',light:{'accent':'#0E7C66','accent-ink':'#FFFFFF','accent-soft':'#E2F3EE','hero':'#0F1B2D'},dark:{'accent':'#3CC5A3','accent-ink':'#04231B','accent-soft':'#12342C','hero':'#1B2A40'}},
   ocean:{name:'Ocean',light:{'accent':'#1D5FD1','accent-ink':'#FFFFFF','accent-soft':'#E4EDFC','hero':'#0E2347'},dark:{'accent':'#6AA5FF','accent-ink':'#061631','accent-soft':'#15294D','hero':'#16305C'}},
   sunset:{name:'Sunset',light:{'accent':'#B4470C','accent-ink':'#FFFFFF','accent-soft':'#FCEBDD','hero':'#3A1A0A'},dark:{'accent':'#FFA05A','accent-ink':'#2A1100','accent-soft':'#43260F','hero':'#47260F'}},
@@ -293,9 +304,9 @@ var extend=function(a,b){for(var k in b)if(Object.prototype.hasOwnProperty.call(
 var getPath=function(o,p){p=p.split('.');for(var i=0;i<p.length&&o!=null;i++)o=o[p[i]];return o;};
 
 /* ---------- data ---------- */
-function defaults(){return {lang:'en',mode:'auto',palette:'forest',textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
+function defaults(){return {lang:'en',mode:'dark',palette:'mono',ui:2,textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
 function emptyDb(){return {v:1,demo:false,settings:defaults(),people:[],loans:[],activity:[]};}
-function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
+function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){storageOK=false;toast(T('Could not save. Storage may be full (photos use a lot).'));}}
 function log(k,v){db.activity.push({id:uid(),ts:Date.now(),k:k,v:v||{}});if(db.activity.length>3000)db.activity.splice(0,db.activity.length-3000);}
 function seed(){
@@ -626,7 +637,7 @@ function loansCsv(){
 function restoreFrom(text){
   var o=null;try{o=JSON.parse(text);}catch(e){}
   if(!o||!Array.isArray(o.loans)||!Array.isArray(o.people))return showErr(T('That is not a valid backup.'));
-  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
+  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
 }
 document.addEventListener('click',function(e){
   var t=e.target;if(t.hasAttribute&&t.hasAttribute('data-scrim')){if(state.conf)state.conf=null;else state.sheet=null;render();return;}
@@ -655,6 +666,7 @@ applyTheme();
 try{history.replaceState({d:0},'');}catch(e){}
 try{var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){if(db.settings.mode==='auto'){applyTheme();render();}});}catch(e){}
 render();
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();});
 if(window.__SW__){try{if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}catch(e){}}
 
 })();
