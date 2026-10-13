@@ -43,13 +43,13 @@ var MODES={
     'bad':'#B42318','bad-bg':'#FDE7E5','warn':'#7A4100','warn-bg':'#FFEBCF','good':'#0B6150','good-bg':'#E2F3EE',
     'gA-bg':'#0B6150','gA-fg':'#FFFFFF','gB-bg':'#BFE6DA','gB-fg':'#0B3D33','gC-bg':'#FFE3A3','gC-fg':'#5C3B00','gD-bg':'#F4B58A','gD-fg':'#4A2000','gE-bg':'#D5DAE1','gE-fg':'#243044',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'},
-  dark:{'bg':'#08090B','surface':'#101216','ink':'#F2F4F7','muted':'#8B93A1','line':'#23262C','field-line':'#5A616E','seg':'#1A1D22','scrim':'rgba(0,0,0,.65)',
+  dark:{'bg':'#0B0E17','surface':'#141927','ink':'#F1F3FA','muted':'#8E97B0','line':'#222A3F','field-line':'#5B6585','seg':'#1B2236','scrim':'rgba(0,0,0,.65)',
     'bad':'#FF9A90','bad-bg':'#3A1C1C','warn':'#FFC46B','warn-bg':'#3A2A10','good':'#7FD6C0','good-bg':'#12342C',
     'gA-bg':'#3CC5A3','gA-fg':'#04231B','gB-bg':'#1F4A40','gB-fg':'#BFE6DA','gC-bg':'#4A3A12','gC-fg':'#FFE3A3','gD-bg':'#55301A','gD-fg':'#F4B58A','gE-bg':'#2A3547','gE-fg':'#C5CEDB',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'}
 };
 var PALETTES={
-  mono:{name:'Mono',light:{'accent':'#0A0A0B','accent-ink':'#FFFFFF','accent-soft':'#ECEDEF','hero':'#0A0A0B'},dark:{'accent':'#FFFFFF','accent-ink':'#08090B','accent-soft':'#1D2024','hero':'#15171B'}},
+  mono:{name:'Mono',light:{'accent':'#4F5FE8','accent-ink':'#FFFFFF','accent-soft':'#E9ECFF','hero':'#FFFFFF'},dark:{'accent':'#8B9CFF','accent-ink':'#0B0E17','accent-soft':'#1E2547','hero':'#141927'}},
   teal:{name:'Teal',light:{'accent':'#0E7C66','accent-ink':'#FFFFFF','accent-soft':'#E2F3EE','hero':'#0F1B2D'},dark:{'accent':'#3CC5A3','accent-ink':'#04231B','accent-soft':'#12342C','hero':'#1B2A40'}},
   ocean:{name:'Ocean',light:{'accent':'#1D5FD1','accent-ink':'#FFFFFF','accent-soft':'#E4EDFC','hero':'#0E2347'},dark:{'accent':'#6AA5FF','accent-ink':'#061631','accent-soft':'#15294D','hero':'#16305C'}},
   sunset:{name:'Sunset',light:{'accent':'#B4470C','accent-ink':'#FFFFFF','accent-soft':'#FCEBDD','hero':'#3A1A0A'},dark:{'accent':'#FFA05A','accent-ink':'#2A1100','accent-soft':'#43260F','hero':'#47260F'}},

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Amanah</title><meta name="theme-color" content="#08090B">
+<title>Amanah</title><meta name="theme-color" content="#0B0E17">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Amanah">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700&display=swap">
@@ -197,13 +197,30 @@ button.hero{cursor:pointer}
 /* v2 look: monochrome, Vercel/Linear base, Revolut numbers */
 body{background-image:linear-gradient(rgba(128,128,128,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(128,128,128,.07) 1px,transparent 1px);background-size:48px 48px}
 html[data-mode="dark"] body{background-color:#08090B}
-.hero{background:linear-gradient(160deg,#1A1C21,#0A0A0B)!important;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px rgba(0,0,0,.35);border-radius:22px}
+.hero{border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px rgba(0,0,0,.35);border-radius:22px}
 html:not([data-mode="dark"]) .hero{box-shadow:0 18px 40px rgba(0,0,0,.18)}
 .hero .big{font-size:34px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 .hero .label{letter-spacing:.02em}
 h1,h2,h3{letter-spacing:-.025em}
 .card,.row,.item{border-radius:16px}
 .num{font-weight:600;letter-spacing:-.02em}
+
+/* v3: MacroFactor-inspired */
+html[data-mode="dark"] body{background-color:#0B0E17;background-image:none}
+body{background-image:none}
+.card,.flush{border-radius:22px}
+.hero2{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:16px}
+.h2top{display:flex;align-items:center;gap:16px}
+.ring{position:relative;width:128px;height:128px;flex:none}.ring svg{width:100%;height:100%}
+.rt,.rf{fill:none;stroke-width:11}.rt{stroke:var(--seg)}.rf{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.rc b{font-size:28px;font-weight:800;letter-spacing:-.04em}.rc span{font-size:12px;color:var(--muted)}
+.h2r{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+.mh{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted)}.mac .num{font-size:22px;font-weight:700;letter-spacing:-.03em;display:block;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}.dot.g,.bar u.g{background:#4ADE80}.dot.o,.bar u.o{background:#FF9F68}
+.bar{height:6px;border-radius:99px;background:var(--seg);margin-top:6px;overflow:hidden}.bar u{display:block;height:100%;border-radius:99px;text-decoration:none}
+.trend{border-top:1px solid var(--line);padding-top:12px}.th{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}.th b{font-size:17px;color:var(--ink);font-weight:700;letter-spacing:-.02em}
+.trend svg{width:100%;height:56px;margin-top:8px;display:block}.tl{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.ta{fill:var(--accent);opacity:.12}
+.trend small{display:block;margin-top:2px;font-size:11.5px}
 
 </style></head><body>
 <div id="app"></div><div id="sheetRoot"></div><div id="confRoot"></div>
@@ -258,13 +275,13 @@ var MODES={
     'bad':'#B42318','bad-bg':'#FDE7E5','warn':'#7A4100','warn-bg':'#FFEBCF','good':'#0B6150','good-bg':'#E2F3EE',
     'gA-bg':'#0B6150','gA-fg':'#FFFFFF','gB-bg':'#BFE6DA','gB-fg':'#0B3D33','gC-bg':'#FFE3A3','gC-fg':'#5C3B00','gD-bg':'#F4B58A','gD-fg':'#4A2000','gE-bg':'#D5DAE1','gE-fg':'#243044',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'},
-  dark:{'bg':'#08090B','surface':'#101216','ink':'#F2F4F7','muted':'#8B93A1','line':'#23262C','field-line':'#5A616E','seg':'#1A1D22','scrim':'rgba(0,0,0,.65)',
+  dark:{'bg':'#0B0E17','surface':'#141927','ink':'#F1F3FA','muted':'#8E97B0','line':'#222A3F','field-line':'#5B6585','seg':'#1B2236','scrim':'rgba(0,0,0,.65)',
     'bad':'#FF9A90','bad-bg':'#3A1C1C','warn':'#FFC46B','warn-bg':'#3A2A10','good':'#7FD6C0','good-bg':'#12342C',
     'gA-bg':'#3CC5A3','gA-fg':'#04231B','gB-bg':'#1F4A40','gB-fg':'#BFE6DA','gC-bg':'#4A3A12','gC-fg':'#FFE3A3','gD-bg':'#55301A','gD-fg':'#F4B58A','gE-bg':'#2A3547','gE-fg':'#C5CEDB',
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'}
 };
 var PALETTES={
-  mono:{name:'Mono',light:{'accent':'#0A0A0B','accent-ink':'#FFFFFF','accent-soft':'#ECEDEF','hero':'#0A0A0B'},dark:{'accent':'#FFFFFF','accent-ink':'#08090B','accent-soft':'#1D2024','hero':'#15171B'}},
+  mono:{name:'Mono',light:{'accent':'#4F5FE8','accent-ink':'#FFFFFF','accent-soft':'#E9ECFF','hero':'#FFFFFF'},dark:{'accent':'#8B9CFF','accent-ink':'#0B0E17','accent-soft':'#1E2547','hero':'#141927'}},
   teal:{name:'Teal',light:{'accent':'#0E7C66','accent-ink':'#FFFFFF','accent-soft':'#E2F3EE','hero':'#0F1B2D'},dark:{'accent':'#3CC5A3','accent-ink':'#04231B','accent-soft':'#12342C','hero':'#1B2A40'}},
   ocean:{name:'Ocean',light:{'accent':'#1D5FD1','accent-ink':'#FFFFFF','accent-soft':'#E4EDFC','hero':'#0E2347'},dark:{'accent':'#6AA5FF','accent-ink':'#061631','accent-soft':'#15294D','hero':'#16305C'}},
   sunset:{name:'Sunset',light:{'accent':'#B4470C','accent-ink':'#FFFFFF','accent-soft':'#FCEBDD','hero':'#3A1A0A'},dark:{'accent':'#FFA05A','accent-ink':'#2A1100','accent-soft':'#43260F','hero':'#47260F'}},
@@ -389,10 +406,22 @@ function loanList(){
   }).sort(function(a,b){var da=dueIn(a),db_=dueIn(b);if(da==null&&db_==null)return b.ts-a.ts;if(da==null)return 1;if(db_==null)return -1;return da-db_;});
   return list.length?list.map(loanRow).join(''):empty(f==='done'?T('Nothing settled yet.'):T('Nothing here. Tap + to add a loan.'));
 }
+
+function heroHtml(t){
+  var tot=0,pd=0;db.loans.forEach(function(l){if(l.dir==='lent'&&l.status==='open'){tot+=l.amount;pd+=paidOf(l);}});
+  var pct=tot?Math.round(pd/tot*100):0,R=52,C=2*Math.PI*R,off=C*(1-pct/100);
+  var mx=Math.max(t.lent,t.owe,1),now=Date.now(),pts=[],i;
+  for(i=7;i>=0;i--){var at=now-i*7*864e5,v=0;db.loans.forEach(function(l){if(l.status!=='open'||l.ts>at)return;var p=0;l.payments.forEach(function(x){if(x.ts<=at)p+=x.amount;});v+=(l.dir==='lent'?1:-1)*Math.max(0,l.amount-p);});pts.push(v);}
+  var lo=Math.min.apply(0,pts),hi=Math.max.apply(0,pts),rg=(hi-lo)||1,W=300,H=56,d=pts.map(function(v,k){return (k?'L':'M')+(k*W/7).toFixed(1)+' '+(H-4-(v-lo)/rg*(H-12)).toFixed(1);}).join(' ');
+  return '<section class="hero2"><div class="h2top"><div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="'+R+'" class="rt"/><circle cx="60" cy="60" r="'+R+'" class="rf" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 60 60)"/></svg><div class="rc"><b>'+pct+'%</b><span>'+esc(T('repaid'))+'</span></div></div>'+
+  '<div class="h2r"><div class="mac"><div class="mh"><i class="dot g"></i><span>'+esc(T('People owe you'))+'</span></div><b class="num">'+fmt(t.lent)+'</b><div class="bar"><u class="g" style="width:'+Math.round(t.lent/mx*100)+'%"></u></div></div>'+
+  '<div class="mac"><div class="mh"><i class="dot o"></i><span>'+esc(T('You owe'))+'</span></div><b class="num">'+fmt(t.owe)+'</b><div class="bar"><u class="o" style="width:'+Math.round(t.owe/mx*100)+'%"></u></div></div></div></div>'+
+  '<div class="trend"><div class="th"><span>'+esc(T('Net position'))+'</span><b class="num">'+(t.lent-t.owe>=0?'+':'-')+fmt(Math.abs(t.lent-t.owe))+' '+esc(T('Birr'))+'</b></div><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+' L'+W+' '+H+' L0 '+H+'Z" class="ta"/><path d="'+d+'" class="tl"/></svg><small>'+esc(T('Last 8 weeks'))+'</small></div></section>';
+}
 function viewHome(){
   var t=totals(),al=alerts(),n=al.length;
   return topbar(db.demo?T('Amanah (example data)'):'Amanah',new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}),'<button class="iconbtn" data-a="tab" data-v="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,22)+(n?'<span class="badge">'+n+'</span>':'')+'</button>')+
-  '<section class="hero"><div class="stats" style="border:none;padding:0;grid-template-columns:1fr 1fr"><div><div class="label">'+esc(T('People owe you'))+'</div><b class="num" style="font-size:26px">'+fmt(t.lent)+'</b></div><div><div class="label">'+esc(T('You owe'))+'</div><b class="num" style="font-size:26px">'+fmt(t.owe)+'</b></div></div><div class="stats" style="grid-template-columns:1fr"><div><div class="label">'+esc(T('Net position'))+'</div><b class="num">'+(t.lent-t.owe>=0?'+':'-')+fmt(Math.abs(t.lent-t.owe))+' '+esc(T('Birr'))+'</b></div></div></section>'+
+  heroHtml(t)+
   (n?'<button class="banner" data-a="tab" data-v="alerts" style="width:100%;text-align:left;border:none"><span>'+esc(T('{n} repayments need attention',{n:n}))+'</span>'+ic(I.chev,18)+'</button>':'')+
   seg([{v:'lent',t:T('I lent')},{v:'borrowed',t:T('I borrowed')}],state.side,'side')+
   '<label class="search">'+ic(I.search,20)+'<input id="q" type="search" placeholder="'+esc(T('Search name or note'))+'" aria-label="'+esc(T('Search'))+'" value="'+esc(state.q)+'" data-live="list" autocomplete="off"></label>'+

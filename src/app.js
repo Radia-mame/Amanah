@@ -105,10 +105,22 @@ function loanList(){
   }).sort(function(a,b){var da=dueIn(a),db_=dueIn(b);if(da==null&&db_==null)return b.ts-a.ts;if(da==null)return 1;if(db_==null)return -1;return da-db_;});
   return list.length?list.map(loanRow).join(''):empty(f==='done'?T('Nothing settled yet.'):T('Nothing here. Tap + to add a loan.'));
 }
+
+function heroHtml(t){
+  var tot=0,pd=0;db.loans.forEach(function(l){if(l.dir==='lent'&&l.status==='open'){tot+=l.amount;pd+=paidOf(l);}});
+  var pct=tot?Math.round(pd/tot*100):0,R=52,C=2*Math.PI*R,off=C*(1-pct/100);
+  var mx=Math.max(t.lent,t.owe,1),now=Date.now(),pts=[],i;
+  for(i=7;i>=0;i--){var at=now-i*7*864e5,v=0;db.loans.forEach(function(l){if(l.status!=='open'||l.ts>at)return;var p=0;l.payments.forEach(function(x){if(x.ts<=at)p+=x.amount;});v+=(l.dir==='lent'?1:-1)*Math.max(0,l.amount-p);});pts.push(v);}
+  var lo=Math.min.apply(0,pts),hi=Math.max.apply(0,pts),rg=(hi-lo)||1,W=300,H=56,d=pts.map(function(v,k){return (k?'L':'M')+(k*W/7).toFixed(1)+' '+(H-4-(v-lo)/rg*(H-12)).toFixed(1);}).join(' ');
+  return '<section class="hero2"><div class="h2top"><div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="'+R+'" class="rt"/><circle cx="60" cy="60" r="'+R+'" class="rf" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 60 60)"/></svg><div class="rc"><b>'+pct+'%</b><span>'+esc(T('repaid'))+'</span></div></div>'+
+  '<div class="h2r"><div class="mac"><div class="mh"><i class="dot g"></i><span>'+esc(T('People owe you'))+'</span></div><b class="num">'+fmt(t.lent)+'</b><div class="bar"><u class="g" style="width:'+Math.round(t.lent/mx*100)+'%"></u></div></div>'+
+  '<div class="mac"><div class="mh"><i class="dot o"></i><span>'+esc(T('You owe'))+'</span></div><b class="num">'+fmt(t.owe)+'</b><div class="bar"><u class="o" style="width:'+Math.round(t.owe/mx*100)+'%"></u></div></div></div></div>'+
+  '<div class="trend"><div class="th"><span>'+esc(T('Net position'))+'</span><b class="num">'+(t.lent-t.owe>=0?'+':'-')+fmt(Math.abs(t.lent-t.owe))+' '+esc(T('Birr'))+'</b></div><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+' L'+W+' '+H+' L0 '+H+'Z" class="ta"/><path d="'+d+'" class="tl"/></svg><small>'+esc(T('Last 8 weeks'))+'</small></div></section>';
+}
 function viewHome(){
   var t=totals(),al=alerts(),n=al.length;
   return topbar(db.demo?T('Amanah (example data)'):'Amanah',new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}),'<button class="iconbtn" data-a="tab" data-v="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,22)+(n?'<span class="badge">'+n+'</span>':'')+'</button>')+
-  '<section class="hero"><div class="stats" style="border:none;padding:0;grid-template-columns:1fr 1fr"><div><div class="label">'+esc(T('People owe you'))+'</div><b class="num" style="font-size:26px">'+fmt(t.lent)+'</b></div><div><div class="label">'+esc(T('You owe'))+'</div><b class="num" style="font-size:26px">'+fmt(t.owe)+'</b></div></div><div class="stats" style="grid-template-columns:1fr"><div><div class="label">'+esc(T('Net position'))+'</div><b class="num">'+(t.lent-t.owe>=0?'+':'-')+fmt(Math.abs(t.lent-t.owe))+' '+esc(T('Birr'))+'</b></div></div></section>'+
+  heroHtml(t)+
   (n?'<button class="banner" data-a="tab" data-v="alerts" style="width:100%;text-align:left;border:none"><span>'+esc(T('{n} repayments need attention',{n:n}))+'</span>'+ic(I.chev,18)+'</button>':'')+
   seg([{v:'lent',t:T('I lent')},{v:'borrowed',t:T('I borrowed')}],state.side,'side')+
   '<label class="search">'+ic(I.search,20)+'<input id="q" type="search" placeholder="'+esc(T('Search name or note'))+'" aria-label="'+esc(T('Search'))+'" value="'+esc(state.q)+'" data-live="list" autocomplete="off"></label>'+
