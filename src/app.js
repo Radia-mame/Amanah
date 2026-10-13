@@ -20,9 +20,9 @@ var extend=function(a,b){for(var k in b)if(Object.prototype.hasOwnProperty.call(
 var getPath=function(o,p){p=p.split('.');for(var i=0;i<p.length&&o!=null;i++)o=o[p[i]];return o;};
 
 /* ---------- data ---------- */
-function defaults(){return {lang:'en',mode:'dark',palette:'mono',ui:2,textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
+function defaults(){return {lang:'en',mode:'dark',palette:'violet',ui:3,bgStyle:'charcoal',cAccent:'',cLent:'#6EA8FE',cOwe:'#FF8A5B',textSize:'normal',pin:'',backupAt:0,remindLang:'en'};}
 function emptyDb(){return {v:1,demo:false,settings:defaults(),people:[],loans:[],activity:[]};}
-function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
+function load(){try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&Array.isArray(o.loans)&&Array.isArray(o.people)){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==3){o.settings.ui=3;o.settings.palette='violet';o.settings.mode='dark';o.settings.bgStyle='charcoal';}o.activity=o.activity||[];return o;}}}catch(e){storageOK=false;}return null;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){storageOK=false;toast(T('Could not save. Storage may be full (photos use a lot).'));}}
 function log(k,v){db.activity.push({id:uid(),ts:Date.now(),k:k,v:v||{}});if(db.activity.length>3000)db.activity.splice(0,db.activity.length-3000);}
 function seed(){
@@ -83,7 +83,7 @@ function seg(opts,cur,a){return '<div class="seg" role="group">'+opts.map(functi
 function chips(opts,cur,a){return '<div class="chips" role="group">'+opts.map(function(o){return '<button type="button" class="chip" data-a="'+a+'" data-v="'+esc(o.v)+'" aria-pressed="'+(String(cur)===String(o.v))+'">'+esc(o.t)+'</button>';}).join('')+'</div>';}
 function pagehead(t,right){return '<header class="pagehead"><button class="iconbtn" data-a="back" aria-label="'+esc(T('Back'))+'">'+ic(I.back,22,2)+'</button><h1>'+esc(t)+'</h1>'+(right||'')+'</header>';}
 function topbar(t,sub,right){return '<header class="top"><div><h1>'+esc(t)+'</h1>'+(sub?'<p class="sub">'+esc(sub)+'</p>':'')+'</div>'+(right?'<div class="acts">'+right+'</div>':'')+'</header>';}
-function avatar(n){return '<span class="grade gB" style="border-radius:50%">'+esc((n||'?').trim().charAt(0).toUpperCase())+'</span>';}
+function avatar(n){return '';}
 function empty(t){return '<p class="empty">'+esc(t)+'</p>';}
 
 /* ---------- screens ---------- */
@@ -119,7 +119,7 @@ function heroHtml(t){
 }
 function viewHome(){
   var t=totals(),al=alerts(),n=al.length;
-  return topbar(db.demo?T('Amanah (example data)'):'Amanah',new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}),'<button class="iconbtn" data-a="tab" data-v="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,22)+(n?'<span class="badge">'+n+'</span>':'')+'</button>')+
+  return topbar('Amanah',new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}),'<button class="iconbtn" data-a="tab" data-v="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,22)+(n?'<span class="badge">'+n+'</span>':'')+'</button>')+
   heroHtml(t)+
   (n?'<button class="banner" data-a="tab" data-v="alerts" style="width:100%;text-align:left;border:none"><span>'+esc(T('{n} repayments need attention',{n:n}))+'</span>'+ic(I.chev,18)+'</button>':'')+
   seg([{v:'lent',t:T('I lent')},{v:'borrowed',t:T('I borrowed')}],state.side,'side')+
@@ -142,6 +142,7 @@ function viewSettings(){
   var s=db.settings,sw=Object.keys(PALETTES).map(function(k){var p=PALETTES[k],c=p[isDark()?'dark':'light'];return '<button type="button" class="swatch" data-a="palette" data-v="'+k+'" aria-pressed="'+(s.palette===k)+'"><span class="dots"><i style="background:'+c.hero+'"></i><i style="background:'+c.accent+'"></i><i style="background:'+c['accent-soft']+'"></i></span><span>'+esc(p.name)+'</span></button>';}).join('');
   return topbar(T('Settings'))+
   '<section class="card form"><h3 style="margin:0">'+esc(T('Appearance'))+'</h3>'+seg([{v:'auto',t:T('Automatic')},{v:'light',t:T('Light')},{v:'dark',t:T('Dark')}],s.mode,'mode')+'<div class="swatches">'+sw+'</div>'+seg([{v:'normal',t:T('Normal text')},{v:'large',t:T('Large text')}],s.textSize,'size')+'</section>'+
+  '<section class="card form"><h3 style="margin:0">'+esc(T('Colors'))+'</h3>'+seg([{v:'charcoal',t:'Charcoal'},{v:'black',t:'Black'},{v:'navy',t:'Navy'}],s.bgStyle,'bgStyle')+'<div class="cpick"><label>'+esc(T('Main color'))+'<input type="color" data-col="cAccent" value="'+(s.cAccent||'#A98BFF')+'"></label><label>'+esc(T('People owe you'))+'<input type="color" data-col="cLent" value="'+s.cLent+'"></label><label>'+esc(T('You owe'))+'<input type="color" data-col="cOwe" value="'+s.cOwe+'"></label></div>'+btn('colReset',T('Reset colors'),'')+'</section>'+
   '<section class="card form"><h3 style="margin:0">'+esc(T('Reminder message language'))+'</h3>'+seg([{v:'en',t:'English'},{v:'am',t:'አማርኛ'},{v:'om',t:'Afaan Oromoo'}],s.remindLang,'rlang')+'<small>'+esc(T('The app screens are in English for now. Reminder messages can be sent in the language you choose. Translations are a first draft.'))+'</small></section>'+
   '<section class="card form"><h3 style="margin:0">'+esc(T('App lock'))+'</h3><small>'+esc(T('A 4-digit PIN hides your loans when someone else holds your phone. It is a screen lock, not encryption.'))+'</small>'+(s.pin?btns(btn('pinSet',T('Change PIN'),''),btn('pinOff',T('Turn off'),'danger')):btn('pinSet',T('Set a PIN'),''))+'</section>'+
   '<section class="card form"><h3 style="margin:0">'+esc(T('Backup'))+'</h3><small>'+esc(s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet. Your data lives only on this phone.'))+'</small>'+
@@ -334,6 +335,8 @@ function act(a,el){
     case 'personEdit':var ep=find(db.people,id);openSheet({t:'personForm',id:id},{f_name:ep.name,f_phone:ep.phone});return false;
     case 'personSave':var sp=find(db.people,id),nm=(state.f.f_name||'').trim();if(!nm)return showErr(T('Enter the name.'));sp.name=nm;sp.phone=(state.f.f_phone||'').trim();save();toast(T('Saved'));openSheet({t:'person',id:id});return false;
     case 'activity':state.pages.push('activity');break;
+    case 'bgStyle':db.settings.bgStyle=v;save();applyTheme();render();break;
+    case 'colReset':db.settings.cAccent='';db.settings.cLent='#6EA8FE';db.settings.cOwe='#FF8A5B';db.settings.bgStyle='charcoal';save();applyTheme();render();break;
     case 'mode':db.settings.mode=v;save();applyTheme();break;
     case 'palette':db.settings.palette=v;save();applyTheme();break;
     case 'size':db.settings.textSize=v;save();applyTheme();break;
@@ -365,7 +368,7 @@ function loansCsv(){
 function restoreFrom(text){
   var o=null;try{o=JSON.parse(text);}catch(e){}
   if(!o||!Array.isArray(o.loans)||!Array.isArray(o.people))return showErr(T('That is not a valid backup.'));
-  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==2){o.settings.ui=2;o.settings.palette='mono';o.settings.mode='dark';}o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
+  ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==3){o.settings.ui=3;o.settings.palette='violet';o.settings.mode='dark';o.settings.bgStyle='charcoal';}o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
 }
 document.addEventListener('click',function(e){
   var t=e.target;if(t.hasAttribute&&t.hasAttribute('data-scrim')){if(state.conf)state.conf=null;else state.sheet=null;render();return;}
@@ -394,5 +397,6 @@ applyTheme();
 try{history.replaceState({d:0},'');}catch(e){}
 try{var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){if(db.settings.mode==='auto'){applyTheme();render();}});}catch(e){}
 render();
+addEventListener('input',function(e){var c=e.target&&e.target.getAttribute&&e.target.getAttribute('data-col');if(c){db.settings[c]=e.target.value;save();applyTheme();}});
 addEventListener('beforeinstallprompt',function(e){e.preventDefault();});
 if(window.__SW__){try{if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}catch(e){}}

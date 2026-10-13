@@ -49,6 +49,7 @@ var MODES={
     'hero-ink':'#FFFFFF','hero-muted':'#C3CCDA','hero-line':'rgba(255,255,255,.2)'}
 };
 var PALETTES={
+  violet:{name:'Violet',light:{'accent':'#6D4FD8','accent-ink':'#FFFFFF','accent-soft':'#EFEAFC','hero':'#FFFFFF'},dark:{'accent':'#A98BFF','accent-ink':'#14101F','accent-soft':'#2C2640','hero':'#252528'}},
   mono:{name:'Mono',light:{'accent':'#4F5FE8','accent-ink':'#FFFFFF','accent-soft':'#E9ECFF','hero':'#FFFFFF'},dark:{'accent':'#8B9CFF','accent-ink':'#0B0E17','accent-soft':'#1E2547','hero':'#141927'}},
   teal:{name:'Teal',light:{'accent':'#0E7C66','accent-ink':'#FFFFFF','accent-soft':'#E2F3EE','hero':'#0F1B2D'},dark:{'accent':'#3CC5A3','accent-ink':'#04231B','accent-soft':'#12342C','hero':'#1B2A40'}},
   ocean:{name:'Ocean',light:{'accent':'#1D5FD1','accent-ink':'#FFFFFF','accent-soft':'#E4EDFC','hero':'#0E2347'},dark:{'accent':'#6AA5FF','accent-ink':'#061631','accent-soft':'#15294D','hero':'#16305C'}},
@@ -60,6 +61,9 @@ var PALETTES={
 function isDark(){var m=db.settings.mode;return m==='dark'||(m==='auto'&&!!window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
 function applyTheme(){
   var s=db.settings,dk=isDark(),root=document.documentElement,p=PALETTES[s.palette]||PALETTES.teal,vars=extend(extend({},dk?MODES.dark:MODES.light),p[dk?'dark':'light']);
+  if(dk){var B={charcoal:{bg:'#1B1B1D',surface:'#252528',line:'#3A3A3F',seg:'#2F2F33'},black:{bg:'#000000',surface:'#111113',line:'#2A2A2E',seg:'#1A1A1D'},navy:{bg:'#0B0E17',surface:'#141927',line:'#222A3F',seg:'#1B2236'}}[s.bgStyle||'charcoal'];vars.bg=B.bg;vars.surface=B.surface;vars.line=B.line;vars.seg=B.seg;vars.hero=B.surface;}
+  var ac=s.cAccent;if(/^#[0-9a-f]{6}$/i.test(ac||'')){var r=parseInt(ac.substr(1,2),16),g=parseInt(ac.substr(3,2),16),bl=parseInt(ac.substr(5,2),16);vars.accent=ac;vars['accent-ink']=(r*.299+g*.587+bl*.114)>150?'#111111':'#FFFFFF';vars['accent-soft']='rgba('+r+','+g+','+bl+',.18)';}
+  vars.lent=s.cLent||'#6EA8FE';vars.owe=s.cOwe||'#FF8A5B';
   for(var k in vars)root.style.setProperty('--'+k,vars[k]);
   root.setAttribute('data-mode',dk?'dark':'light');
   root.setAttribute('data-size',s.textSize==='large'?'large':'normal');
