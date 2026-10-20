@@ -181,7 +181,7 @@ var SHEETS={
       fInput('f_name',dir==='lent'?T('Who did you lend to?'):T('Who lent you?'),{list:'ppl'})+fInput('f_phone',T('Phone (optional, for reminders)'),{type:'tel',im:'tel'})+
       '<div class="grid2">'+fInput('f_amt',T('Amount (Birr)'),{im:'numeric'})+fInput('f_date',T('Date'),{type:'date',max:ymd(Date.now())})+'</div>'+
       fInput('f_due',T('Repayment date (optional)'),{type:'date'})+
-      '<div class="chips">'+[7,14,30,60].map(function(d){return '<button type="button" class="chip" data-a="dueIn" data-v="'+d+'">'+esc(T('In {n} days',{n:d}))+'</button>';}).join('')+'<button type="button" class="chip" data-a="dueIn" data-v="0">'+esc(T('No date'))+'</button></div>'+
+      '<div class="chips">'+[1,7,14,30,60].map(function(d){return '<button type="button" class="chip" data-a="dueIn" data-v="'+d+'">'+esc(d===1?T('Tomorrow'):T('In {n} days',{n:d}))+'</button>';}).join('')+'<button type="button" class="chip" data-a="dueIn" data-v="0">'+esc(T('No date'))+'</button></div>'+
       fInput('f_note',T('Note (optional)'),{ph:T('What was it for?')});
     if(!l){body+='<div class="field">'+esc(T('Proof photo (optional)'))+'</div>'+(F('f_photo')?'<img src="'+F('f_photo')+'" alt="" style="max-width:100%;border-radius:14px">'+btn('photoClear',T('Remove photo'),''):btn('photoPick',T('Take or choose a photo'),'',{icon:I.camera}));}
     return {title:l?T('Edit loan'):T('Add a loan'),body:body+errBox()+btn('loanSave',T('Save'),'primary')+'</div>'};
@@ -223,6 +223,7 @@ function renderSheet(){
   var r=SHEETS[s.t]?SHEETS[s.t](s):null;if(!r){state.sheet=null;root.innerHTML='';return;}
   var old=root.querySelector('.panel'),st=old&&s===renderSheet.last?old.scrollTop:0;
   root.innerHTML='<div class="scrim" data-scrim="1"><div class="panel" role="dialog" aria-modal="true" aria-label="'+esc(r.title)+'" tabindex="-1"><div class="head"><h2>'+esc(r.title)+'</h2><button type="button" class="iconbtn" data-a="closeSheet" aria-label="'+esc(T('Close'))+'">'+ic(I.x,22,2)+'</button></div>'+r.body+'</div></div>';
+  kbdHints(root);
   var p=root.querySelector('.panel');p.scrollTop=st;if(s!==renderSheet.last)p.focus();renderSheet.last=s;
 }
 function renderConf(){
@@ -234,6 +235,13 @@ var lastKey='';
 function navHtml(){
   var b=function(t,icon,label,badge){return '<button type="button" data-a="tab" data-v="'+t+'"'+(state.tab===t?' aria-current="page"':'')+'>'+ic(icon,24)+esc(label)+'</button>';};
   return b('home',I.home,T('Home'))+b('people',I.users,T('People'))+'<button type="button" class="mid" data-a="quick" aria-label="'+esc(T('Add a loan'))+'"><span class="disc">'+ic(I.plus,28,2.4)+'</span><span>'+esc(T('Add'))+'</span></button>'+b('alerts',I.bell,T('Alerts'))+b('settings',I.gear,T('Settings'));
+}
+function kbdHints(root){
+  var els=[].slice.call(root.querySelectorAll('input:not([type=hidden]):not([type=file]):not([type=color]):not([type=date]),textarea'));
+  els.forEach(function(e,i){
+    if(e.tagName==='TEXTAREA'){e.setAttribute('enterkeyhint','enter');return;}
+    e.setAttribute('enterkeyhint',i<els.length-1?'next':'done');
+  });
 }
 function render(){
   var y=window.scrollY,key=state.tab+'|'+state.pages.length+'|'+state.locked,ae=document.activeElement,fid=ae&&ae.id?ae.id:'',a0=0,a1=0;
@@ -383,7 +391,11 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){
   var el=e.target;if(el.id==='bk_file'){var f=el.files&&el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){restoreFrom(String(r.result||''));el.value='';};r.readAsText(f);}
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=null;else return;render();}});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&e.target&&e.target.tagName==='INPUT'&&e.target.closest&&e.target.closest('#sheetRoot')){
+    var all=[].slice.call(document.querySelectorAll('#sheetRoot input:not([type=hidden]):not([type=file]):not([type=color]):not([type=date]),#sheetRoot textarea')),i=all.indexOf(e.target);
+    e.preventDefault();if(i>-1&&i<all.length-1)all[i+1].focus();else e.target.blur();return;
+  }if(e.key==='Escape'){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=null;else return;render();}});
 var hiddenAt=0;
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){hiddenAt=Date.now();return;}

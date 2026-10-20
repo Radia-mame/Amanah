@@ -40,3 +40,10 @@ body{background-image:none}
 .cpick input{width:100%;height:46px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);padding:3px}
 html[data-mode="dark"] .banner{background:var(--seg);color:var(--ink)}
 html[data-mode="dark"] .fab,html[data-mode="dark"] .tab.add .plus{background:#fff;color:#111}
+/* v4: Unbounded everywhere, scaled for its wide letters */
+body{font-size:13px;letter-spacing:-.005em}
+.top h1{font-size:22px}.pagehead h1{font-size:19px}.card h3{font-size:14px}
+.chip{font-size:12px}.field input,.field select,.field textarea{font-size:14px}
+.hero .big span{font-size:13px}.hero .stats b{font-size:15px}.tile b{font-size:22px}.panel h2{font-size:17px}
+.btn,button{font-family:inherit}
+input,textarea,select,button{font-family:inherit}
