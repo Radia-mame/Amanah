@@ -468,17 +468,20 @@ function viewAlerts(){
   var al=alerts();
   return pagehead(T('Notifications'))+'<p class="sub">'+esc(T('Repayments due soon or late'))+'</p><section class="card flush">'+(al.length?al.map(function(a){return '<button class="row" data-a="loan" data-id="'+a.id+'"><span style="width:10px;height:10px;border-radius:50%;flex:none;background:'+(a.sev==='bad'?'var(--bad)':'#D98A00')+'"></span><span class="grow"><b>'+esc(a.t)+'</b><small>'+esc(a.s)+'</small></span>'+ic(I.chev,18)+'</button>';}).join(''):empty(T('Nothing is due soon. Good.')))+'</section>'+'<p class="sub">'+esc(T('Alerts show inside the app when you open it. Phone notifications need a server and will come in a later version.'))+'</p>';
 }
+function setRow(v,t,sub){return '<button type="button" class="row" data-a="setp" data-v="'+v+'"><span class="grow"><b>'+esc(t)+'</b><small>'+esc(sub)+'</small></span>'+ic(I.chev,18)+'</button>';}
 function viewSettings(){
+  var s=db.settings,ln={en:'English',am:'አማርኛ',om:'Afaan Oromoo'};
+  return topbar(T('Settings'))+'<section class="card flush">'+setRow('language',T('Language'),ln[s.remindLang]||'English')+setRow('look',T('Appearance and colors'),T('Theme, colors, text size'))+setRow('security',T('Security'),s.pin?T('PIN is on'):T('PIN is off'))+setRow('backup',T('Backup and data'),s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet'))+setRow('about',T('About'),'Amanah')+'</section>';
+}
+function viewSetPage(k){
   var s=db.settings,sw=Object.keys(PALETTES).map(function(k){var p=PALETTES[k],c=p[isDark()?'dark':'light'];return '<button type="button" class="swatch" data-a="palette" data-v="'+k+'" aria-pressed="'+(s.palette===k)+'"><span class="dots"><i style="background:'+c.hero+'"></i><i style="background:'+c.accent+'"></i><i style="background:'+c['accent-soft']+'"></i></span><span>'+esc(p.name)+'</span></button>';}).join('');
-  return topbar(T('Settings'))+
-  '<section class="card form"><h3 style="margin:0">'+esc(T('Appearance'))+'</h3>'+seg([{v:'auto',t:T('Automatic')},{v:'light',t:T('Light')},{v:'dark',t:T('Dark')}],s.mode,'mode')+'<div class="swatches">'+sw+'</div>'+seg([{v:'normal',t:T('Normal text')},{v:'large',t:T('Large text')}],s.textSize,'size')+'</section>'+
-  '<section class="card form"><h3 style="margin:0">'+esc(T('Colors'))+'</h3>'+seg([{v:'charcoal',t:'Charcoal'},{v:'black',t:'Black'},{v:'navy',t:'Navy'}],s.bgStyle,'bgStyle')+'<div class="cpick"><label>'+esc(T('Main color'))+'<input type="color" data-col="cAccent" value="'+(s.cAccent||'#A98BFF')+'"></label><label>'+esc(T('People owe you'))+'<input type="color" data-col="cLent" value="'+s.cLent+'"></label><label>'+esc(T('You owe'))+'<input type="color" data-col="cOwe" value="'+s.cOwe+'"></label></div>'+btn('colReset',T('Reset colors'),'')+'</section>'+
-  '<section class="card form"><h3 style="margin:0">'+esc(T('Reminder message language'))+'</h3>'+seg([{v:'en',t:'English'},{v:'am',t:'አማርኛ'},{v:'om',t:'Afaan Oromoo'}],s.remindLang,'rlang')+'<small>'+esc(T('The app screens are in English for now. Reminder messages can be sent in the language you choose. Translations are a first draft.'))+'</small></section>'+
-  '<section class="card form"><h3 style="margin:0">'+esc(T('App lock'))+'</h3><small>'+esc(T('A 4-digit PIN hides your loans when someone else holds your phone. It is a screen lock, not encryption.'))+'</small>'+(s.pin?btns(btn('pinSet',T('Change PIN'),''),btn('pinOff',T('Turn off'),'danger')):btn('pinSet',T('Set a PIN'),''))+'</section>'+
-  '<section class="card form"><h3 style="margin:0">'+esc(T('Backup'))+'</h3><small>'+esc(s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet. Your data lives only on this phone.'))+'</small>'+
-  btn('backup',T('Download backup file'),'',{icon:I.download})+btn('copyBackup',T('Copy backup text'),'')+btn('csv',T('Export loans to Excel'),'')+
-  '<label class="field" for="bk_in"><span>'+esc(T('Restore: paste backup text'))+'</span><textarea id="bk_in" data-f>'+esc(F('bk_in'))+'</textarea></label>'+errBox()+btn('restore',T('Restore from text'),'')+'<input type="file" id="bk_file" accept=".json,text/plain" hidden>'+btn('pickBackup',T('Restore from file'),'')+'</section>'+
-  '<section class="card form">'+(db.demo?btn('clearDemo',T('Remove example data'),''):'')+btn('resetAll',T('Erase everything'),'danger')+'</section>';
+  var ttl={language:T('Language'),look:T('Appearance and colors'),security:T('Security'),backup:T('Backup and data'),about:T('About')}[k]||T('Settings');
+  var body=k==='language'?'<section class="card form"><h3 style="margin:0">'+esc(T('Reminder message language'))+'</h3>'+seg([{v:'en',t:'English'},{v:'am',t:'አማርኛ'},{v:'om',t:'Afaan Oromoo'}],s.remindLang,'rlang')+'<small>'+esc(T('The app screens are in English for now. Reminder messages can be sent in the language you choose. Translations are a first draft.'))+'</small></section>'
+  :k==='look'?'<section class="card form"><h3 style="margin:0">'+esc(T('Appearance'))+'</h3>'+seg([{v:'auto',t:T('Automatic')},{v:'light',t:T('Light')},{v:'dark',t:T('Dark')}],s.mode,'mode')+'<div class="swatches">'+sw+'</div>'+seg([{v:'normal',t:T('Normal text')},{v:'large',t:T('Large text')}],s.textSize,'size')+'</section>'+'<section class="card form"><h3 style="margin:0">'+esc(T('Colors'))+'</h3>'+seg([{v:'charcoal',t:'Charcoal'},{v:'black',t:'Black'},{v:'navy',t:'Navy'}],s.bgStyle,'bgStyle')+'<div class="cpick"><label>'+esc(T('Main color'))+'<input type="color" data-col="cAccent" value="'+(s.cAccent||'#A98BFF')+'"></label><label>'+esc(T('People owe you'))+'<input type="color" data-col="cLent" value="'+s.cLent+'"></label><label>'+esc(T('You owe'))+'<input type="color" data-col="cOwe" value="'+s.cOwe+'"></label></div>'+btn('colReset',T('Reset colors'),'')+'</section>'
+  :k==='security'?'<section class="card form"><h3 style="margin:0">'+esc(T('App lock'))+'</h3><small>'+esc(T('A 4-digit PIN hides your loans when someone else holds your phone. It is a screen lock, not encryption.'))+'</small>'+(s.pin?btns(btn('pinSet',T('Change PIN'),''),btn('pinOff',T('Turn off'),'danger')):btn('pinSet',T('Set a PIN'),''))+'</section>'
+  :k==='backup'?'<section class="card form"><h3 style="margin:0">'+esc(T('Backup'))+'</h3><small>'+esc(s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet. Your data lives only on this phone.'))+'</small>'+btn('backup',T('Download backup file'),'',{icon:I.download})+btn('copyBackup',T('Copy backup text'),'')+btn('csv',T('Export loans to Excel'),'')+'<label class="field" for="bk_in"><span>'+esc(T('Restore: paste backup text'))+'</span><textarea id="bk_in" data-f>'+esc(F('bk_in'))+'</textarea></label>'+errBox()+btn('restore',T('Restore from text'),'')+'<input type="file" id="bk_file" accept=".json,text/plain" hidden>'+btn('pickBackup',T('Restore from file'),'')+'</section>'+'<section class="card form">'+(db.demo?btn('clearDemo',T('Remove example data'),''):'')+btn('resetAll',T('Erase everything'),'danger')+'</section>'
+  :'<section class="card form"><h3 style="margin:0">Amanah</h3><small>'+esc(T('Track money you lend and borrow. Everything is saved on this phone only, nothing is sent anywhere.'))+'</small></section>';
+  return pagehead(ttl)+body;
 }
 function actRange(){
   var t=startOfDay(Date.now()),f=state.actFilter,s,e;
@@ -613,7 +616,7 @@ function render(){
   var y=window.scrollY,key=state.tab+'|'+state.pages.length+'|'+state.locked,ae=document.activeElement,fid=ae&&ae.id?ae.id:'',a0=0,a1=0;
   try{if(fid&&ae.selectionStart!=null){a0=ae.selectionStart;a1=ae.selectionEnd;}}catch(e){}
   var top=state.pages[state.pages.length-1];
-  var html=state.locked?viewLock():top==='alerts'?viewAlerts():state.tab==='home'?viewHome():state.tab==='people'?viewPeople():state.tab==='activity'?viewActivityTab():viewSettings();
+  var html=state.locked?viewLock():top==='alerts'?viewAlerts():(top&&top.indexOf('set:')===0)?viewSetPage(top.slice(4)):state.tab==='home'?viewHome():state.tab==='people'?viewPeople():state.tab==='activity'?viewActivityTab():viewSettings();
   $('#app').innerHTML=html;
   $('#nav').hidden=state.locked||!!top;document.body.classList.toggle('nonav',state.locked||!!top);if(!state.locked&&!top)$('#navIn').innerHTML=navHtml();
   renderSheet();renderConf();
@@ -709,6 +712,7 @@ function act(a,el){
     case 'personEdit':var ep=find(db.people,id);openSheet({t:'personForm',id:id},{f_name:ep.name,f_phone:ep.phone});return false;
     case 'personSave':var sp=find(db.people,id),nm=(state.f.f_name||'').trim();if(!nm)return showErr(T('Enter the name.'));sp.name=nm;sp.phone=(state.f.f_phone||'').trim();save();toast(T('Saved'));openSheet({t:'person',id:id});return false;
     case 'alerts':state.pages.push('alerts');break;
+    case 'setp':state.pages.push('set:'+v);break;
     case 'actf':state.actFilter=v;if(v==='date'&&!state.actDate)state.actDate=ymd(Date.now());if(v==='range'){if(!state.actFrom)state.actFrom=ymd(Date.now());if(!state.actTo)state.actTo=ymd(Date.now());}break;
     case 'bgStyle':db.settings.bgStyle=v;save();applyTheme();render();break;
     case 'colReset':db.settings.cAccent='';db.settings.cLent='#6EA8FE';db.settings.cOwe='#FF8A5B';db.settings.bgStyle='charcoal';save();applyTheme();render();break;
