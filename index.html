@@ -400,7 +400,7 @@ function alerts(){
 function personNet(pid){var n=0;db.loans.forEach(function(l){if(l.pid===pid&&active(l))n+=l.dir==='lent'?balOf(l):-balOf(l);});return n;}
 
 /* ---------- state ---------- */
-var state={tab:'home',side:'lent',filter:'all',q:'',pages:[],sheet:null,f:{},conf:null,locked:false,pin:'',actFilter:'today',actDate:'',actFrom:'',actTo:''};
+var state={tab:'home',pq:'',ptab:'all',side:'lent',filter:'all',q:'',pages:[],sheet:null,f:{},conf:null,locked:false,pin:'',actFilter:'today',actDate:'',actFrom:'',actTo:''};
 var tag=function(t,k){return '<span class="tag '+k+'">'+esc(t)+'</span>';};
 var btn=function(a,label,cls,o){o=o||{};return '<button type="button" class="btn'+(cls?' '+cls:'')+' wide" data-a="'+a+'"'+(o.id?' data-id="'+esc(o.id)+'"':'')+(o.v!=null?' data-v="'+esc(o.v)+'"':'')+'>'+(o.icon?ic(o.icon,18,2):'')+esc(label)+'</button>';};
 var btns=function(a,b){return '<div class="btns">'+a+b+'</div>';};
@@ -457,12 +457,29 @@ function viewHome(){
   chips([{v:'all',t:T('Open')},{v:'overdue',t:T('Overdue')},{v:'soon',t:T('Due in 7 days')},{v:'done',t:T('Settled')}],state.filter,'filter')+
   '<section class="card flush" id="list">'+loanList()+'</section>';
 }
-function viewPeople(){
-  var rows=db.people.slice().sort(function(a,b){return Math.abs(personNet(b.id))-Math.abs(personNet(a.id));}).map(function(p){
-    var n=personNet(p.id);
-    return '<button class="row" data-a="person" data-id="'+p.id+'">'+avatar(p.name)+'<span class="grow"><b>'+esc(p.name)+'</b><small>'+esc(p.phone||T('No phone'))+'</small></span><span class="end"><b class="num" style="color:'+(n>0?'var(--good)':n<0?'var(--bad)':'var(--ink)')+'">'+fmt(Math.abs(n))+'</b><small>'+esc(n>0?T('owes you'):n<0?T('you owe'):T('settled'))+'</small></span></button>';
+function sideBal(pid,dir){var n=0;db.loans.forEach(function(l){if(l.pid===pid&&l.dir===dir&&active(l))n+=balOf(l);});return n;}
+function peopleList(){
+  var q=(state.pq||'').trim().toLowerCase(),t=state.ptab||'all';
+  var rows=db.people.filter(function(p){
+    if(q&&(p.name||'').toLowerCase().indexOf(q)<0&&(p.phone||'').indexOf(q)<0)return false;
+    return t==='owes'?sideBal(p.id,'lent')>0:t==='owe'?sideBal(p.id,'borrowed')>0:true;
+  }).map(function(p){var a=t==='owes'?sideBal(p.id,'lent'):t==='owe'?sideBal(p.id,'borrowed'):personNet(p.id);return {p:p,n:a,k:Math.abs(a)};})
+  .sort(function(a,b){return b.k-a.k;}).map(function(r){
+    var p=r.p,n=r.n;
+    var col=t==='owes'?'var(--good)':t==='owe'?'var(--bad)':(n>0?'var(--good)':n<0?'var(--bad)':'var(--ink)');
+    var lab=t==='owes'?T('owes you'):t==='owe'?T('you owe'):(n>0?T('owes you'):n<0?T('you owe'):T('settled'));
+    return '<button class="row" data-a="person" data-id="'+p.id+'">'+avatar(p.name)+'<span class="grow"><b>'+esc(p.name)+'</b><small>'+esc(p.phone||T('No phone'))+'</small></span><span class="end"><b class="num" style="color:'+col+'">'+fmt(Math.abs(n))+'</b><small>'+esc(lab)+'</small></span></button>';
   }).join('');
-  return topbar(T('People'),T('{n} people',{n:db.people.length}))+'<section class="card flush">'+(rows||empty(T('No people yet.')))+'</section>';
+  var em=(state.pq||'').trim()?T('No one matches your search.'):t==='owes'?T('Nobody owes you right now.'):t==='owe'?T('You do not owe anyone right now.'):T('No people yet.');
+  return rows||empty(em);
+}
+function viewPeople(){
+  var t=state.ptab||'all';
+  var chip=function(v,label){return '<button type="button" class="chip" data-a="ptab" data-v="'+v+'" aria-pressed="'+(t===v?'true':'false')+'">'+esc(label)+'</button>';};
+  return topbar(T('People'),T('{n} people',{n:db.people.length}))+
+  '<label class="search">'+ic(I.search,20)+'<input id="pq" type="search" placeholder="'+esc(T('Search people'))+'" aria-label="'+esc(T('Search people'))+'" value="'+esc(state.pq||'')+'" data-live="plist" autocomplete="off"></label>'+
+  '<div class="chips" role="group" aria-label="'+esc(T('Filter'))+'">'+chip('all',T('All'))+chip('owes',T('Owes me'))+chip('owe',T('I owe'))+'</div>'+
+  '<section class="card flush" id="plist">'+peopleList()+'</section>';
 }
 function viewAlerts(){
   var al=alerts();
@@ -671,7 +688,7 @@ function loanSave(){
 function act(a,el){
   var id=el.getAttribute('data-id'),v=el.getAttribute('data-v'),l=id?find(db.loans,id):null;
   switch(a){
-    case 'tab':state.tab=v;state.pages=[];state.sheet=null;state.conf=null;state.f={};break;
+    case 'tab':state.pq='';state.tab=v;state.pages=[];state.sheet=null;state.conf=null;state.f={};break;
     case 'quick':openSheet({t:'quick'});return false;
     case 'back':if(histN>0){history.back();return false;}backOnce();break;
     case 'closeSheet':state.sheet=null;break;
@@ -685,7 +702,7 @@ function act(a,el){
     case 'addLoanFor':var pp=find(db.people,id);openSheet({t:'loanForm'},{f_dir:'lent',f_name:pp.name,f_phone:pp.phone,f_date:ymd(Date.now())});return false;
     case 'loanEdit':var pe=person(l.pid);openSheet({t:'loanForm',id:id},{f_dir:l.dir,f_name:pe.name,f_phone:pe.phone,f_amt:String(l.amount),f_date:ymd(l.ts),f_due:l.due?ymd(l.due):'',f_note:l.note||''});return false;
     case 'fDir':state.f.f_dir=v;break;
-    case 'dueIn':var base=fromYmd(state.f.f_date)||startOfDay(Date.now());state.f.f_due=Number(v)?ymd(addDays(base,Number(v))):'';break;
+    case 'dueIn':var base=startOfDay(Date.now());state.f.f_due=Number(v)?ymd(addDays(base,Number(v))):'';break;
     case 'loanSave':return loanSave();
     case 'photoPick':pickPhoto(function(d){state.f.f_photo=d;render();});return false;
     case 'photoClear':state.f.f_photo='';break;
@@ -712,6 +729,7 @@ function act(a,el){
     case 'personEdit':var ep=find(db.people,id);openSheet({t:'personForm',id:id},{f_name:ep.name,f_phone:ep.phone});return false;
     case 'personSave':var sp=find(db.people,id),nm=(state.f.f_name||'').trim();if(!nm)return showErr(T('Enter the name.'));sp.name=nm;sp.phone=(state.f.f_phone||'').trim();save();toast(T('Saved'));openSheet({t:'person',id:id});return false;
     case 'alerts':state.pages.push('alerts');break;
+    case 'ptab':state.ptab=v;break;
     case 'setp':state.pages.push('set:'+v);break;
     case 'actf':state.actFilter=v;if(v==='date'&&!state.actDate)state.actDate=ymd(Date.now());if(v==='range'){if(!state.actFrom)state.actFrom=ymd(Date.now());if(!state.actTo)state.actTo=ymd(Date.now());}break;
     case 'bgStyle':db.settings.bgStyle=v;save();applyTheme();render();break;
@@ -758,6 +776,7 @@ document.addEventListener('click',function(e){
 document.addEventListener('input',function(e){
   var el=e.target;if(el.hasAttribute('data-f'))state.f[el.id]=el.value;
   if(el.getAttribute('data-live')==='list'){state.q=el.value;$('#list').innerHTML=loanList();}
+  if(el.getAttribute('data-live')==='plist'){state.pq=el.value;$('#plist').innerHTML=peopleList();}
 });
 document.addEventListener('change',function(e){
   var el=e.target;if(el.id==='bk_file'){var f=el.files&&el.files[0];if(!f)return;var r=new FileReader();r.onload=function(){restoreFrom(String(r.result||''));el.value='';};r.readAsText(f);}
