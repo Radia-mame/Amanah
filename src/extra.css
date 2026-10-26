@@ -55,3 +55,8 @@ input,textarea,select,button{font-family:inherit}
 .daterow input{width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:1px solid var(--field-line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit}
 .daygroup{margin:16px 4px 6px;font-size:13px;font-weight:700;color:var(--ink)}
 .chips[role="group"]{flex-wrap:wrap;overflow:visible}
+/* person sheet loan rows: breathing room, notes stop before the amount */
+.lr .row{gap:14px}
+.lr .row .grow{flex:1 1 0;min-width:0;padding-right:6px}
+.lr .row .grow small{overflow-wrap:anywhere;word-break:break-word}
+.lr .row .end{flex:none;min-width:104px;padding-right:2px}

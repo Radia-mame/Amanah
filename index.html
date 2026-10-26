@@ -246,6 +246,11 @@ input,textarea,select,button{font-family:inherit}
 .daterow input{width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:1px solid var(--field-line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit}
 .daygroup{margin:16px 4px 6px;font-size:13px;font-weight:700;color:var(--ink)}
 .chips[role="group"]{flex-wrap:wrap;overflow:visible}
+/* person sheet loan rows: breathing room, notes stop before the amount */
+.lr .row{gap:14px}
+.lr .row .grow{flex:1 1 0;min-width:0;padding-right:6px}
+.lr .row .grow small{overflow-wrap:anywhere;word-break:break-word}
+.lr .row .end{flex:none;min-width:104px;padding-right:2px}
 
 </style></head><body>
 <div id="app"></div><div id="sheetRoot"></div><div id="confRoot"></div>
@@ -598,7 +603,7 @@ var SHEETS={
   person:function(s){
     var p=find(db.people,s.id);if(!p)return null;var n=personNet(p.id),ls=personLoans(p.id);
     return {title:p.name,body:'<div class="sum"><div class="total"><span style="font-weight:700">'+esc(n>0?T('Owes you'):n<0?T('You owe'):T('All settled'))+'</span><b class="num'+(n<0?' out':'')+'">'+fmt(Math.abs(n))+' <small style="font-size:14px">'+esc(T('Birr'))+'</small></b></div></div>'+(p.phone?kv(T('Phone'),'<span class="num">'+esc(p.phone)+'</span>'):'')+
-      '<section class="card flush" style="padding-inline:0">'+(ls.length?ls.map(function(l){var tg=loanTag(l);return '<button class="row" data-a="loan" data-id="'+l.id+'"><span class="grow"><b>'+esc(l.dir==='lent'?T('Lent'):T('Borrowed'))+' '+fmt(l.amount)+'</b><small>'+esc(fmtDate(l.ts))+(l.note?' - '+esc(l.note):'')+'</small>'+(tg?'<span class="tags">'+tag(tg.t,tg.k)+'</span>':'')+'</span><span class="end"><b class="num">'+fmt(active(l)?balOf(l):0)+'</b></span></button>';}).join(''):empty(T('No loans.')))+'</section>'+
+      '<section class="card flush lr" style="padding-inline:16px">'+(ls.length?ls.map(function(l){var tg=loanTag(l);return '<button class="row" data-a="loan" data-id="'+l.id+'"><span class="grow"><b>'+esc(l.dir==='lent'?T('Lent'):T('Borrowed'))+' '+fmt(l.amount)+'</b><small>'+esc(fmtDate(l.ts))+(l.note?' - '+esc(l.note):'')+'</small>'+(tg?'<span class="tags">'+tag(tg.t,tg.k)+'</span>':'')+'</span><span class="end"><b class="num">'+fmt(active(l)?balOf(l):0)+'</b></span></button>';}).join(''):empty(T('No loans.')))+'</section>'+
       '<div class="form">'+btns(btn('addLoanFor',T('Add loan'),'primary',{id:p.id}),btn('personEdit',T('Edit'),'',{id:p.id}))+'</div>'};
   },
   personForm:function(s){var p=find(db.people,s.id);if(!p)return null;return {title:T('Edit person'),body:'<div class="form">'+fInput('f_name',T('Name'),{})+fInput('f_phone',T('Phone'),{type:'tel',im:'tel'})+errBox()+btn('personSave',T('Save'),'primary',{id:p.id})+'</div>'};},
@@ -644,12 +649,13 @@ function render(){
 function toast(m){var t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(function(){t.hidden=true;},2600);}
 function showErr(m){var e=document.querySelector(state.sheet?'#sheetRoot #sheetErr':'#sheetErr');if(!e){toast(m);return false;}e.textContent=m;e.hidden=false;return false;}
 function ask(o){state.conf=o;render();}
+function upSheet(){var f=state.sheet&&state.sheet.from;return f?{t:f.t,id:f.id}:null;}
 function openSheet(s,f){state.sheet=s;state.f=f||{};render();}
 
 /* ---------- back button ---------- */
 var histN=0,histIgnore=0;
-function depth(){return (state.conf?1:0)+(state.sheet?1:0)+state.pages.length+(state.tab!=='home'?1:0);}
-function backOnce(){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=null;else if(state.pages.length)state.pages.pop();else if(state.tab!=='home')state.tab='home';}
+function depth(){return (state.conf?1:0)+(state.sheet?1:0)+(state.sheet&&state.sheet.from?1:0)+state.pages.length+(state.tab!=='home'?1:0);}
+function backOnce(){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=upSheet();else if(state.pages.length)state.pages.pop();else if(state.tab!=='home')state.tab='home';}
 function syncHist(){
   if(histIgnore>0||state.locked)return;var d=depth();
   try{if(d>histN){while(histN<d){histN++;history.pushState({d:histN},'');}}else if(d<histN){var n=histN-d;histN=d;histIgnore++;history.go(-n);}}catch(e){}
@@ -694,12 +700,12 @@ function act(a,el){
     case 'tab':state.pq='';state.tab=v;state.pages=[];state.sheet=null;state.conf=null;state.f={};break;
     case 'quick':openSheet({t:'quick'});return false;
     case 'back':if(histN>0){history.back();return false;}backOnce();break;
-    case 'closeSheet':state.sheet=null;break;
+    case 'closeSheet':state.sheet=upSheet();break;
     case 'confNo':state.conf=null;break;
     case 'confYes':var fn=state.conf&&state.conf.fn;state.conf=null;if(fn)fn();break;
     case 'side':state.side=v;break;
     case 'filter':state.filter=v;break;
-    case 'loan':openSheet({t:'loan',id:id});return false;
+    case 'loan':openSheet({t:'loan',id:id,from:(state.sheet&&state.sheet.t==='person')?{t:'person',id:state.sheet.id}:null});return false;
     case 'person':openSheet({t:'person',id:id});return false;
     case 'addLoan':openSheet({t:'loanForm'},{f_dir:v,f_date:ymd(Date.now())});return false;
     case 'addLoanFor':var pp=find(db.people,id);openSheet({t:'loanForm'},{f_dir:'lent',f_name:pp.name,f_phone:pp.phone,f_date:ymd(Date.now())});return false;
@@ -804,7 +810,7 @@ function restoreFrom(text){
   ask({title:T('Restore this backup?'),msg:T('This replaces everything on this phone: {n} loans.',{n:o.loans.length}),ok:T('Yes, restore'),danger:true,fn:function(){o.settings=Object.assign(defaults(),o.settings||{});if(o.settings.ui!==3){o.settings.ui=3;o.settings.palette='violet';o.settings.mode='dark';o.settings.bgStyle='charcoal';}o.activity=o.activity||[];db=o;save();applyTheme();toast(T('Backup restored'));}});
 }
 document.addEventListener('click',function(e){
-  var t=e.target;if(t.hasAttribute&&t.hasAttribute('data-scrim')){if(state.conf)state.conf=null;else state.sheet=null;render();return;}
+  var t=e.target;if(t.hasAttribute&&t.hasAttribute('data-scrim')){if(state.conf)state.conf=null;else state.sheet=upSheet();render();return;}
   var el=t.closest?t.closest('[data-a]'):null;if(!el||el.disabled)return;var r;
   try{r=act(el.getAttribute('data-a'),el);}catch(err){console.error(err);toast(T('Something went wrong. Please try again.'));return;}
   if(r!==false)render();
@@ -822,7 +828,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&e.target&&e.target.tagName==='INPUT'&&e.target.closest&&e.target.closest('#sheetRoot')){
     var all=[].slice.call(document.querySelectorAll('#sheetRoot input:not([type=hidden]):not([type=file]):not([type=color]):not([type=date]),#sheetRoot textarea')),i=all.indexOf(e.target);
     e.preventDefault();if(i>-1&&i<all.length-1)all[i+1].focus();else e.target.blur();return;
-  }if(e.key==='Escape'){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=null;else return;render();}});
+  }if(e.key==='Escape'){if(state.conf)state.conf=null;else if(state.sheet)state.sheet=upSheet();else return;render();}});
 var hiddenAt=0;
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){hiddenAt=Date.now();return;}
