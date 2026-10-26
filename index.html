@@ -568,13 +568,13 @@ var SHEETS={
       '<div class="grid2">'+fInput('f_amt',T('Amount (Birr)'),{im:'numeric'})+fInput('f_date',T('Date'),{type:'date',max:ymd(Date.now())})+'</div>'+
       fInput('f_due',T('Repayment date (optional)'),{type:'date'})+
       '<div class="chips">'+[1,7,14,30,60].map(function(d){return '<button type="button" class="chip" data-a="dueIn" data-v="'+d+'">'+esc(d===1?T('Tomorrow'):T('In {n} days',{n:d}))+'</button>';}).join('')+'<button type="button" class="chip" data-a="dueIn" data-v="0">'+esc(T('No date'))+'</button></div>'+
-      fInput('f_note',T('Note (optional)'),{ph:T('What was it for?')});
+      fInput('f_note',T('Note (optional)'),{ph:T('What was it for?')})+methodHtml(dir);
     if(!l){body+='<div class="field">'+esc(T('Proof photo (optional)'))+'</div>'+(F('f_photo')?'<img src="'+F('f_photo')+'" alt="" style="max-width:100%;border-radius:14px">'+btn('photoClear',T('Remove photo'),''):btn('photoPick',T('Take or choose a photo'),'',{icon:I.camera}));}
     return {title:l?T('Edit loan'):T('Add a loan'),body:body+errBox()+btn('loanSave',T('Save'),'primary')+'</div>'};
   },
   loan:function(s){
     var l=find(db.loans,s.id);if(!l)return null;var p=person(l.pid),tg=loanTag(l),b=balOf(l),lent=l.dir==='lent';
-    var body=(tg?'<div class="tags">'+tag(tg.t,tg.k)+'</div>':'')+'<div>'+kv(T('Person'),'<button class="link" data-a="person" data-id="'+l.pid+'" style="min-height:0">'+esc(p.name)+'</button>')+kv(lent?T('You lent'):T('You borrowed'),'<b class="num">'+fmt(l.amount)+' '+esc(T('Birr'))+'</b>')+kv(T('Paid back'),'<span class="num">'+fmt(paidOf(l))+'</span>')+kv(T('Balance'),'<b class="num">'+fmt(l.status==='open'?b:0)+'</b>')+kv(T('Date'),esc(fmtDate(l.ts)))+kv(T('Repayment date'),l.due?esc(fmtDate(l.due)):esc(T('Not set')))+(l.note?kv(T('Note'),esc(l.note)):'')+'</div>';
+    var body=(tg?'<div class="tags">'+tag(tg.t,tg.k)+'</div>':'')+'<div>'+kv(T('Person'),'<button class="link" data-a="person" data-id="'+l.pid+'" style="min-height:0">'+esc(p.name)+'</button>')+kv(lent?T('You lent'):T('You borrowed'),'<b class="num">'+fmt(l.amount)+' '+esc(T('Birr'))+'</b>')+kv(T('Paid back'),'<span class="num">'+fmt(paidOf(l))+'</span>')+kv(T('Balance'),'<b class="num">'+fmt(l.status==='open'?b:0)+'</b>')+kv(T('Date'),esc(fmtDate(l.ts)))+kv(T('Repayment date'),l.due?esc(fmtDate(l.due)):esc(T('Not set')))+(l.note?kv(T('Note'),esc(l.note)):'')+((l.methods&&l.methods.length)?kv(T('Payment method'),l.methods.map(function(x){return esc(mName(x))+(l.methods.length>1?' <span class="num">'+fmt(x.amt)+'</span>':'');}).join('<br>')):'')+'</div>';
     if(paidOf(l)>0)body+='<div class="progress"><i style="width:'+Math.min(100,Math.round(paidOf(l)/l.amount*100))+'%"></i></div>';
     if(l.payments.length)body+='<div class="field">'+esc(T('Payments'))+'</div><section class="card flush" style="padding-inline:12px">'+l.payments.map(function(x){return '<div class="kv" style="align-items:center"><span style="color:var(--ink)"><b class="num">'+fmt(x.amount)+'</b><br><small>'+esc(fmtDate(x.ts)+(x.note?' - '+x.note:''))+'</small></span><button type="button" class="btn sm" data-a="payUndo" data-id="'+l.id+'" data-v="'+x.id+'">'+esc(T('Undo'))+'</button></div>';}).join('')+'</section>';
     if(l.photo)body+='<div class="field">'+esc(T('Proof'))+'</div><img src="'+l.photo+'" alt="'+esc(T('Proof photo'))+'" style="max-width:100%;border-radius:14px">';
@@ -675,13 +675,16 @@ function getPerson(name,phone){
 function loanSave(){
   var s=state.sheet,l=s.id?find(db.loans,s.id):null,f=state.f,name=(f.f_name||'').trim(),amt=num(f.f_amt),date=fromYmd(f.f_date)||startOfDay(Date.now()),due=fromYmd(f.f_due)||0;
   if(!name)return showErr(T('Enter the name.'));if(!amt)return showErr(T('Enter the amount.'));if(due&&due<startOfDay(date))return showErr(T('The repayment date is before the loan date.'));
+  var sel=mSel();
+  if(sel.length>1){var sum=0;sel.forEach(function(k){sum+=num(f['f_ma_'+k]);});if(sum!==amt)return showErr(T('The amounts per method must add up to {t} Birr (now {a}).',{t:fmt(amt),a:fmt(sum)}));}
+  var meths=methodsFromForm(amt);
   var ts=startOfDay(date)===startOfDay(Date.now())?Date.now():date+43200000,phone=(f.f_phone||'').trim();
   if(l){
-    var p=getPerson(name,phone);if(phone)p.phone=phone;l.pid=p.id;l.amount=Math.max(amt,0);l.ts=(l.ts&&startOfDay(l.ts)===startOfDay(date))?l.ts:ts;l.due=due;l.note=(f.f_note||'').trim();
+    var p=getPerson(name,phone);if(phone)p.phone=phone;l.pid=p.id;l.amount=Math.max(amt,0);l.ts=(l.ts&&startOfDay(l.ts)===startOfDay(date))?l.ts:ts;l.due=due;l.note=(f.f_note||'').trim();l.methods=meths;
     log('Loan edited: {n} {a} Birr',{n:name,a:fmt(amt)});save();toast(T('Saved'));openSheet({t:'loan',id:l.id});return false;
   }
   var pe=getPerson(name,phone),dir=f.f_dir||'lent';
-  var nl={id:uid(),dir:dir,pid:pe.id,amount:amt,ts:ts,due:due,note:(f.f_note||'').trim(),photo:f.f_photo||'',status:'open',payments:[]};
+  var nl={id:uid(),dir:dir,pid:pe.id,amount:amt,ts:ts,due:due,note:(f.f_note||'').trim(),photo:f.f_photo||'',status:'open',payments:[],methods:meths};
   db.loans.push(nl);log('Loan added: {n} {a} Birr ({d})',{n:name,a:fmt(amt),d:dir==='lent'?T('lent'):T('borrowed')});save();
   state.side=dir;state.filter='all';state.q='';state.sheet=null;state.tab='home';state.pages=[];toast(T('Loan saved'));
 }
@@ -700,7 +703,7 @@ function act(a,el){
     case 'person':openSheet({t:'person',id:id});return false;
     case 'addLoan':openSheet({t:'loanForm'},{f_dir:v,f_date:ymd(Date.now())});return false;
     case 'addLoanFor':var pp=find(db.people,id);openSheet({t:'loanForm'},{f_dir:'lent',f_name:pp.name,f_phone:pp.phone,f_date:ymd(Date.now())});return false;
-    case 'loanEdit':var pe=person(l.pid);openSheet({t:'loanForm',id:id},{f_dir:l.dir,f_name:pe.name,f_phone:pe.phone,f_amt:String(l.amount),f_date:ymd(l.ts),f_due:l.due?ymd(l.due):'',f_note:l.note||''});return false;
+    case 'loanEdit':var pe=person(l.pid);openSheet({t:'loanForm',id:id},Object.assign({f_dir:l.dir,f_name:pe.name,f_phone:pe.phone,f_amt:String(l.amount),f_date:ymd(l.ts),f_due:l.due?ymd(l.due):'',f_note:l.note||''},methodsToForm(l)));return false;
     case 'fDir':state.f.f_dir=v;break;
     case 'dueIn':var base=startOfDay(Date.now());state.f.f_due=Number(v)?ymd(addDays(base,Number(v))):'';break;
     case 'loanSave':return loanSave();
@@ -729,6 +732,8 @@ function act(a,el){
     case 'personEdit':var ep=find(db.people,id);openSheet({t:'personForm',id:id},{f_name:ep.name,f_phone:ep.phone});return false;
     case 'personSave':var sp=find(db.people,id),nm=(state.f.f_name||'').trim();if(!nm)return showErr(T('Enter the name.'));sp.name=nm;sp.phone=(state.f.f_phone||'').trim();save();toast(T('Saved'));openSheet({t:'person',id:id});return false;
     case 'alerts':state.pages.push('alerts');break;
+    case 'mopen':state.f.f_mopen=state.f.f_mopen==='1'?'':'1';break;
+    case 'mtog':var cs=mSel(),ix=cs.indexOf(v);if(ix>-1)cs.splice(ix,1);else cs.push(v);state.f.f_meth=cs.join(',');break;
     case 'ptab':state.ptab=v;break;
     case 'setp':state.pages.push('set:'+v);break;
     case 'actf':state.actFilter=v;if(v==='date'&&!state.actDate)state.actDate=ymd(Date.now());if(v==='range'){if(!state.actFrom)state.actFrom=ymd(Date.now());if(!state.actTo)state.actTo=ymd(Date.now());}break;
@@ -757,9 +762,40 @@ function act(a,el){
 }
 function copyText(t,m){var ok=function(){toast(m||T('Copied'));},fb=function(){var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');ok();}catch(e){toast(T('Could not copy'));}document.body.removeChild(a);};try{navigator.clipboard.writeText(t).then(ok,fb);}catch(e){fb();}}
 function download(name,text,mime){try{var b=new Blob([text],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},4000);return true;}catch(e){toast(T('Could not save the file.'));return false;}}
+/* ---------- payment methods ---------- */
+var METHODS=[{g:'Cash',i:[['cash','Cash']]},{g:'Mobile wallets',i:[['telebirr','Telebirr'],['mpesa','M-Pesa'],['cbebirr','CBE Birr']]},{g:'Banks',i:[['cbe','CBE'],['abyssinia','Bank of Abyssinia']]},{g:'Other',i:[['other','Other']]}];
+function mName(x){if(x.m==='other')return x.label||T('Other');for(var g=0;g<METHODS.length;g++)for(var k=0;k<METHODS[g].i.length;k++)if(METHODS[g].i[k][0]===x.m)return METHODS[g].i[k][1];return x.m;}
+function mSel(){var v=F('f_meth');return v?v.split(','):[];}
+function mAllocLine(){
+  var sel=mSel();if(sel.length<2)return '';
+  var a=0;sel.forEach(function(k){a+=num(F('f_ma_'+k));});var tot=num(F('f_amt')),ok=tot>0&&a===tot;
+  return '<p class="sub" id="mAlloc" style="color:'+(ok?'var(--good)':'var(--bad)')+'">'+esc(T('Allocated {a} of {t} Birr',{a:fmt(a),t:fmt(tot)}))+'</p>';
+}
+function methodHtml(dir){
+  var sel=mSel(),open=F('f_mopen')==='1',names=sel.map(function(k){return mName({m:k,label:F('f_mo')});}).join(', ');
+  var head='<button type="button" class="row" data-a="mopen" style="min-height:52px;border:1px solid var(--field-line);border-radius:14px;padding:8px 14px;width:100%"><span class="grow"><b style="font-weight:600">'+esc(T('Payment method (optional)'))+'</b><small>'+esc(names||T('Not set'))+'</small></span>'+ic(I.chev,18)+'</button>';
+  if(!open)return head;
+  var h='<div class="field">'+esc(dir==='lent'?T('How did you lend the money?'):T('How did you receive the money?'))+'</div>';
+  METHODS.forEach(function(g){
+    h+='<small style="color:var(--muted);font-weight:600">'+esc(T(g.g))+'</small><div class="chips" style="flex-wrap:wrap;overflow:visible">'+g.i.map(function(it){return '<button type="button" class="chip" data-a="mtog" data-v="'+it[0]+'" aria-pressed="'+(sel.indexOf(it[0])>-1)+'">'+esc(it[1])+'</button>';}).join('')+'</div>';
+  });
+  if(sel.indexOf('other')>-1)h+=fInput('f_mo',T('Name of the other method'),{ml:30});
+  if(sel.length>1){h+='<div class="field">'+esc(T('Amount through each method (Birr)'))+'</div>';sel.forEach(function(k){h+=fInput('f_ma_'+k,mName({m:k,label:F('f_mo')}),{im:'numeric'});});h+=mAllocLine();}
+  return head+h;
+}
+function methodsFromForm(amt){
+  var sel=mSel(),out=[];
+  sel.forEach(function(k){var x={m:k,amt:sel.length===1?amt:num(F('f_ma_'+k))};if(k==='other')x.label=(F('f_mo')||'').trim();out.push(x);});
+  return out;
+}
+function methodsToForm(l){
+  var f={f_meth:(l.methods||[]).map(function(x){return x.m;}).join(',')};
+  (l.methods||[]).forEach(function(x){f['f_ma_'+x.m]=String(x.amt||'');if(x.m==='other')f.f_mo=x.label||'';});
+  return f;
+}
 function loansCsv(){
-  var q=function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},rows=[['Date','Type','Person','Phone','Amount','Paid','Balance','Repayment date','Status','Note']];
-  db.loans.slice().sort(function(a,b){return a.ts-b.ts;}).forEach(function(l){var p=person(l.pid);rows.push([ymd(l.ts),l.dir==='lent'?'Lent':'Borrowed',p.name,p.phone,l.amount,paidOf(l),balOf(l),l.due?ymd(l.due):'',l.status,l.note]);});
+  var q=function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},rows=[['Date','Type','Person','Phone','Amount','Paid','Balance','Repayment date','Status','Note','Payment method']];
+  db.loans.slice().sort(function(a,b){return a.ts-b.ts;}).forEach(function(l){var p=person(l.pid);rows.push([ymd(l.ts),l.dir==='lent'?'Lent':'Borrowed',p.name,p.phone,l.amount,paidOf(l),balOf(l),l.due?ymd(l.due):'',l.status,l.note,(l.methods||[]).map(function(x){return mName(x)+(l.methods.length>1?' '+x.amt:'');}).join(' + ')]);});
   return '﻿'+rows.map(function(r){return r.map(q).join(',');}).join('\r\n');
 }
 function restoreFrom(text){
@@ -775,6 +811,7 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('input',function(e){
   var el=e.target;if(el.hasAttribute('data-f'))state.f[el.id]=el.value;
+  if(el.id&&(el.id.indexOf('f_ma_')===0||el.id==='f_amt')){var al=$('#mAlloc');if(al){var tmp=document.createElement('div');tmp.innerHTML=mAllocLine();if(tmp.firstChild){al.textContent=tmp.firstChild.textContent;al.style.color=tmp.firstChild.style.color;}}}
   if(el.getAttribute('data-live')==='list'){state.q=el.value;$('#list').innerHTML=loanList();}
   if(el.getAttribute('data-live')==='plist'){state.pq=el.value;$('#plist').innerHTML=peopleList();}
 });
