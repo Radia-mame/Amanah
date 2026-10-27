@@ -306,7 +306,13 @@ function loanSave(){
   var s=state.sheet,l=s.id?find(db.loans,s.id):null,f=state.f,name=(f.f_name||'').trim(),amt=num(f.f_amt),date=fromYmd(f.f_date)||startOfDay(Date.now()),due=fromYmd(f.f_due)||0;
   if(!name)return showErr(T('Enter the name.'));if(!amt)return showErr(T('Enter the amount.'));if(due&&due<startOfDay(date))return showErr(T('The repayment date is before the loan date.'));
   var sel=mSel();
-  if(sel.length>1){var sum=0;sel.forEach(function(k){sum+=num(f['f_ma_'+k]);});if(sum!==amt)return showErr(T('The amounts per method must add up to {t} Birr (now {a}).',{t:fmt(amt),a:fmt(sum)}));}
+  if(sel.length>1){
+    var total=0;
+    sel.forEach(function(k){total+=num(f['f_ma_'+k]);});
+    if(Math.abs(total-amt) > 0.01){
+      return showErr(T('The amounts per method must add up to {t} Birr (now {a}).',{t:fmt(amt),a:fmt(total)}));
+    }
+  }
   var meths=methodsFromForm(amt);
   var ts=startOfDay(date)===startOfDay(Date.now())?Date.now():date+43200000,phone=(f.f_phone||'').trim();
   if(l){
