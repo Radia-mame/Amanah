@@ -87,11 +87,17 @@ function avatar(n){return '';}
 function empty(t){return '<p class="empty">'+esc(t)+'</p>';}
 
 /* ---------- screens ---------- */
+/* ---------- screens ---------- */
 function loanRow(l){
   var p=person(l.pid),tg=loanTag(l),b=balOf(l),pc=paidOf(l);
-  return '<button class="row" data-a="loan" data-id="'+l.id+'">'+avatar(p.name)+'<span class="grow"><b>'+esc(p.name)+'</b><small>'+esc(l.note||fmtDate(l.ts))+'</small>'+(tg?'<span class="tags">'+tag(tg.t,tg.k)+'</span>':'')+
-    (pc>0&&b>0?'<span class="progress" style="margin-top:6px"><i style="width:'+Math.min(100,Math.round(pc/l.amount*100))+'%"></i></span>':'')+'</span><span class="end"><b class="num">'+fmt(b>0&&l.status==='open'?b:l.amount)+'</b><small>'+(pc>0&&b>0?esc(T('of {n}',{n:fmt(l.amount)})):esc(T('Birr')))+'</small></span></button>';
+  return '<button class="macro-row" data-a="loan" data-id="'+l.id+'">'+
+    '<span class="status-dot" style="background:'+(l.dir==='lent'?'var(--good)':'var(--warn)')+'"></span>' +
+    '<span class="grow"><b>'+esc(p.name)+'</b><small>'+esc(l.note||fmtDate(l.ts))+'</small>' +
+    (tg?'<span class="tag '+(tg.k || 'gray')+'">'+esc(tg.t)+'</span>':'') +
+    (pc>0&&b>0?'<div class="macro-progress"><i style="width:'+Math.min(100,Math.round((pc/l.amount)*100))+'%"></i></div>':'') +
+    '</span><span class="end"><b class="num">'+fmt(b>0&&l.status==='open'?b:l.amount)+'</b><small>'+(pc>0&&b>0?esc(T('of {n}',{n:fmt(l.amount)})):esc(T('Birr')))+'</small></span></button>';
 }
+
 function loanList(){
   var q=state.q.trim().toLowerCase(),f=state.filter;
   var list=db.loans.filter(function(l){
@@ -110,13 +116,25 @@ function heroHtml(t){
   var tot=0,pd=0;db.loans.forEach(function(l){if(l.dir==='lent'&&l.status==='open'){tot+=l.amount;pd+=paidOf(l);}});
   var pct=tot?Math.round(pd/tot*100):0,R=52,C=2*Math.PI*R,off=C*(1-pct/100);
   var mx=Math.max(t.lent,t.owe,1),now=Date.now(),pts=[],i;
-  for(i=7;i>=0;i--){var at=now-i*7*864e5,v=0;db.loans.forEach(function(l){if(l.status!=='open'||l.ts>at)return;var p=0;l.payments.forEach(function(x){if(x.ts<=at)p+=x.amount;});v+=(l.dir==='lent'?1:-1)*Math.max(0,l.amount-p);});pts.push(v);}
+  for(i=7;i>=0;i--){
+    var at=now-i*7*864e5,v=0;
+    db.loans.forEach(function(l){
+      if(l.status!=='open'||l.ts>at)return;
+      var p=0;l.payments.forEach(function(x){if(x.ts<=at)p+=x.amount;});
+      v+=(l.dir==='lent'?1:-1)*Math.max(0,l.amount-p);
+    });
+    pts.push(v);
+  }
   var lo=Math.min.apply(0,pts),hi=Math.max.apply(0,pts),rg=(hi-lo)||1,W=300,H=56,d=pts.map(function(v,k){return (k?'L':'M')+(k*W/7).toFixed(1)+' '+(H-4-(v-lo)/rg*(H-12)).toFixed(1);}).join(' ');
-  return '<section class="hero2"><div class="h2top"><div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="'+R+'" class="rt"/><circle cx="60" cy="60" r="'+R+'" class="rf" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 60 60)"/></svg><div class="rc"><b>'+pct+'%</b><span>'+esc(T('repaid'))+'</span></div></div>'+
-  '<div class="h2r"><div class="mac"><div class="mh"><i class="dot g"></i><span>'+esc(T('People owe you'))+'</span></div><b class="num">'+fmt(t.lent)+'</b><div class="bar"><u class="g" style="width:'+Math.round(t.lent/mx*100)+'%"></u></div></div>'+
-  '<div class="mac"><div class="mh"><i class="dot o"></i><span>'+esc(T('You owe'))+'</span></div><b class="num">'+fmt(t.owe)+'</b><div class="bar"><u class="o" style="width:'+Math.round(t.owe/mx*100)+'%"></u></div></div></div></div>'+
-  '<div class="trend"><div class="th"><span>'+esc(T('Net position'))+'</span><b class="num">'+(t.lent-t.owe>=0?'+':'-')+fmt(Math.abs(t.lent-t.owe))+' '+esc(T('Birr'))+'</b></div><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+' L'+W+' '+H+' L0 '+H+'Z" class="ta"/><path d="'+d+'" class="tl"/></svg><small>'+esc(T('Last 8 weeks'))+'</small></div></section>';
+  return '<section class="macro-hero">'+
+    '<div class="macro-hero-top"><div class="macro-hero-title">Overview</div><button class="iconbtn" data-a="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,18,1.9)+'</button></div>' +
+    '<div class="macro-hero-value">'+fmt(t.lent - t.owe)+'</div>' +
+    '<div class="sub">Net position</div>' +
+    '<div class="macro-hero-meta"><span class="tag good">+'+fmt(t.lent)+' Birr</span><span class="tag gray">'+fmt(t.owe)+' owed</span></div>' +
+    '<div class="macro-summary"><div class="macro-card"><span class="label">People owe you</span><span class="value">'+fmt(t.lent)+'</span></div><div class="macro-card"><span class="label">You owe</span><span class="value">'+fmt(t.owe)+'</span></div></div>' +
+    '</section>';
 }
+
 function viewHome(){
   var t=totals(),al=alerts(),n=al.length;
   return topbar('Amanah',new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}),'<button class="iconbtn" data-a="alerts" aria-label="'+esc(T('Notifications'))+'">'+ic(I.bell,22)+(n?'<span class="badge">'+n+'</span>':'')+'</button>')+
@@ -127,6 +145,7 @@ function viewHome(){
   chips([{v:'all',t:T('Open')},{v:'overdue',t:T('Overdue')},{v:'soon',t:T('Due in 7 days')},{v:'done',t:T('Settled')}],state.filter,'filter')+
   '<section class="card flush" id="list">'+loanList()+'</section>';
 }
+
 function sideBal(pid,dir){var n=0;db.loans.forEach(function(l){if(l.pid===pid&&l.dir===dir&&active(l))n+=balOf(l);});return n;}
 function peopleList(){
   var q=(state.pq||'').trim().toLowerCase(),t=state.ptab||'all';
@@ -149,71 +168,11 @@ function viewPeople(){
   return topbar(T('People'),T('{n} people',{n:db.people.length}))+
   '<label class="search">'+ic(I.search,20)+'<input id="pq" type="search" placeholder="'+esc(T('Search people'))+'" aria-label="'+esc(T('Search people'))+'" value="'+esc(state.pq||'')+'" data-live="plist" autocomplete="off"></label>'+
   '<div class="chips" role="group" aria-label="'+esc(T('Filter'))+'">'+chip('all',T('All'))+chip('owes',T('Owes me'))+chip('owe',T('I owe'))+'</div>'+
-  '<section class="card flush" id="plist">'+peopleList()+'</section>';
+  '<section class="card flush" id="list">'+peopleList()+'</section>';
 }
 function viewAlerts(){
   var al=alerts();
   return pagehead(T('Notifications'))+'<p class="sub">'+esc(T('Repayments due soon or late'))+'</p><section class="card flush">'+(al.length?al.map(function(a){return '<button class="row" data-a="loan" data-id="'+a.id+'"><span style="width:10px;height:10px;border-radius:50%;flex:none;background:'+(a.sev==='bad'?'var(--bad)':'#D98A00')+'"></span><span class="grow"><b>'+esc(a.t)+'</b><small>'+esc(a.s)+'</small></span>'+ic(I.chev,18)+'</button>';}).join(''):empty(T('Nothing is due soon. Good.')))+'</section>'+'<p class="sub">'+esc(T('Alerts show inside the app when you open it. Phone notifications need a server and will come in a later version.'))+'</p>';
-}
-function setRow(v,t,sub){return '<button type="button" class="row" data-a="setp" data-v="'+v+'"><span class="grow"><b>'+esc(t)+'</b><small>'+esc(sub)+'</small></span>'+ic(I.chev,18)+'</button>';}
-function viewSettings(){
-  var s=db.settings,ln={en:'English',am:'አማርኛ',om:'Afaan Oromoo'};
-  return topbar(T('Settings'))+'<section class="card flush">'+setRow('language',T('Language'),ln[s.remindLang]||'English')+setRow('look',T('Appearance and colors'),T('Theme, colors, text size'))+setRow('security',T('Security'),s.pin?T('PIN is on'):T('PIN is off'))+setRow('backup',T('Backup and data'),s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet'))+setRow('about',T('About'),'Amanah')+'</section>';
-}
-function viewSetPage(k){
-  var s=db.settings,sw=Object.keys(PALETTES).map(function(k){var p=PALETTES[k],c=p[isDark()?'dark':'light'];return '<button type="button" class="swatch" data-a="palette" data-v="'+k+'" aria-pressed="'+(s.palette===k)+'"><span class="dots"><i style="background:'+c.hero+'"></i><i style="background:'+c.accent+'"></i><i style="background:'+c['accent-soft']+'"></i></span><span>'+esc(p.name)+'</span></button>';}).join('');
-  var ttl={language:T('Language'),look:T('Appearance and colors'),security:T('Security'),backup:T('Backup and data'),about:T('About')}[k]||T('Settings');
-  var body=k==='language'?'<section class="card form"><h3 style="margin:0">'+esc(T('Reminder message language'))+'</h3>'+seg([{v:'en',t:'English'},{v:'am',t:'አማርኛ'},{v:'om',t:'Afaan Oromoo'}],s.remindLang,'rlang')+'<small>'+esc(T('The app screens are in English for now. Reminder messages can be sent in the language you choose. Translations are a first draft.'))+'</small></section>'
-  :k==='look'?'<section class="card form"><h3 style="margin:0">'+esc(T('Appearance'))+'</h3>'+seg([{v:'auto',t:T('Automatic')},{v:'light',t:T('Light')},{v:'dark',t:T('Dark')}],s.mode,'mode')+'<div class="swatches">'+sw+'</div>'+seg([{v:'normal',t:T('Normal text')},{v:'large',t:T('Large text')}],s.textSize,'size')+'</section>'+'<section class="card form"><h3 style="margin:0">'+esc(T('Colors'))+'</h3>'+seg([{v:'charcoal',t:'Charcoal'},{v:'black',t:'Black'},{v:'navy',t:'Navy'}],s.bgStyle,'bgStyle')+'<div class="cpick"><label>'+esc(T('Main color'))+'<input type="color" data-col="cAccent" value="'+(s.cAccent||'#A98BFF')+'"></label><label>'+esc(T('People owe you'))+'<input type="color" data-col="cLent" value="'+s.cLent+'"></label><label>'+esc(T('You owe'))+'<input type="color" data-col="cOwe" value="'+s.cOwe+'"></label></div>'+btn('colReset',T('Reset colors'),'')+'</section>'
-  :k==='security'?'<section class="card form"><h3 style="margin:0">'+esc(T('App lock'))+'</h3><small>'+esc(T('A 4-digit PIN hides your loans when someone else holds your phone. It is a screen lock, not encryption.'))+'</small>'+(s.pin?btns(btn('pinSet',T('Change PIN'),''),btn('pinOff',T('Turn off'),'danger')):btn('pinSet',T('Set a PIN'),''))+'</section>'
-  :k==='backup'?'<section class="card form"><h3 style="margin:0">'+esc(T('Backup'))+'</h3><small>'+esc(s.backupAt?T('Last backup: {d}',{d:fmtDate(s.backupAt)}):T('No backup yet. Your data lives only on this phone.'))+'</small>'+btn('backup',T('Download backup file'),'',{icon:I.download})+btn('copyBackup',T('Copy backup text'),'')+btn('csv',T('Export loans to Excel'),'')+'<label class="field" for="bk_in"><span>'+esc(T('Restore: paste backup text'))+'</span><textarea id="bk_in" data-f>'+esc(F('bk_in'))+'</textarea></label>'+errBox()+btn('restore',T('Restore from text'),'')+'<input type="file" id="bk_file" accept=".json,text/plain" hidden>'+btn('pickBackup',T('Restore from file'),'')+'</section>'+'<section class="card form">'+(db.demo?btn('clearDemo',T('Remove example data'),''):'')+btn('resetAll',T('Erase everything'),'danger')+'</section>'
-  :'<section class="card form"><h3 style="margin:0">Amanah</h3><small>'+esc(T('Track money you lend and borrow. Everything is saved on this phone only, nothing is sent anywhere.'))+'</small></section>';
-  return pagehead(ttl)+body;
-}
-function actRange(){
-  var t=startOfDay(Date.now()),f=state.actFilter,s,e;
-  if(f==='all')return {};
-  if(f==='today')return {s:t,e:addDays(t,1)};
-  if(f==='yesterday')return {s:addDays(t,-1),e:t};
-  if(f==='date'){s=fromYmd(state.actDate);return s?{s:s,e:addDays(s,1)}:{bad:1};}
-  s=fromYmd(state.actFrom);e=fromYmd(state.actTo);
-  if(!s||!e)return {bad:1};
-  if(s>e){var x=s;s=e;e=x;}
-  return {s:s,e:addDays(e,1)};
-}
-function actBody(){
-  var r=actRange(),f=state.actFilter;
-  if(r.bad)return empty(f==='date'?T('Pick a date to see what happened.'):T('Pick both dates to see what happened.'));
-  var l=db.activity.filter(function(a){return r.s==null||(a.ts>=r.s&&a.ts<r.e);}).sort(function(a,b){return b.ts-a.ts;});
-  var h='<p class="sub">'+esc(l.length===1?T('{n} activity',{n:1}):T('{n} activities',{n:l.length}))+'</p>';
-  if(!l.length){
-    return h+empty(f==='today'?T('Nothing happened today.'):f==='yesterday'?T('Nothing happened yesterday.'):f==='date'?T('Nothing happened on this day.'):f==='range'?T('Nothing happened in this period.'):T('Nothing recorded yet.'));
-  }
-  var t0=startOfDay(Date.now()),y0=addDays(t0,-1),cur=-1;
-  l.forEach(function(a){
-    var d=startOfDay(a.ts);
-    if(d!==cur){
-      if(cur!==-1)h+='</section>';
-      cur=d;
-      h+='<p class="daygroup">'+esc(d===t0?T('Today'):d===y0?T('Yesterday'):fmtDate(d))+'</p><section class="card flush">';
-    }
-    h+='<div class="row" style="min-height:52px"><span class="grow"><b style="font-weight:600">'+esc(T(a.k,a.v))+'</b><small>'+esc(fmtTime(a.ts))+'</small></span></div>';
-  });
-  return h+'</section>';
-}
-function viewActivityTab(){
-  var f=state.actFilter,mx=ymd(Date.now());
-  var chip=function(v,label){return '<button type="button" class="chip" data-a="actf" data-v="'+v+'" aria-pressed="'+(f===v?'true':'false')+'">'+esc(label)+'</button>';};
-  var inp=function(k,label){return '<label>'+esc(label)+'<input type="date" data-act="'+k+'" value="'+esc(state[k]||'')+'" max="'+mx+'"></label>';};
-  return topbar(T('Activity'))+
-  '<div class="chips" role="group" aria-label="'+esc(T('Filter'))+'">'+chip('today',T('Today'))+chip('yesterday',T('Yesterday'))+chip('date',T('Choose a date'))+chip('range',T('Date range'))+chip('all',T('All'))+'</div>'+
-  (f==='date'?'<div class="daterow">'+inp('actDate',T('Date'))+'</div>':f==='range'?'<div class="daterow">'+inp('actFrom',T('From'))+inp('actTo',T('To'))+'</div>':'')+
-  '<div id="actBody">'+actBody()+'</div>';
-}
-function viewLock(){
-  var d='';for(var i=0;i<4;i++)d+='<i class="'+(i<state.pin.length?'on':'')+'"></i>';
-  var keys=['1','2','3','4','5','6','7','8','9','','0','del'].map(function(k){return k===''?'<span></span>':'<button type="button" data-a="pinKey" data-v="'+k+'" aria-label="'+(k==='del'?esc(T('Delete')):k)+'">'+(k==='del'?'&#9003;':k)+'</button>';}).join('');
-  return '<div class="lockbox"><h1 style="text-align:center">Amanah</h1><p class="sub" style="text-align:center">'+esc(T('Enter your PIN'))+'</p><div class="dots">'+d+'</div><p class="err" id="lockErr" role="alert" hidden>'+esc(T('Wrong PIN'))+'</p><div class="pad">'+keys+'</div></div>';
 }
 
 /* ---------- sheets ---------- */
