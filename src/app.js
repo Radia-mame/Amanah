@@ -404,7 +404,7 @@ function mName(x){if(x.m==='other')return x.label||T('Other');for(var g=0;g<METH
 function mSel(){var v=F('f_meth');return v?v.split(','):[];}
 function mAllocLine(){
   var sel=mSel();if(sel.length<2)return '';
-  var a=0;sel.forEach(function(k){a+=num(F('f_ma_'+k));});var tot=num(F('f_amt')),ok=tot>0&&a===tot;
+  var a=0;sel.forEach(function(k){a+=num(F('f_ma_'+k));});var tot=num(F('f_amt')),ok=tot>0&&Math.abs(a-tot)<0.01;
   return '<p class="sub" id="mAlloc" style="color:'+(ok?'var(--good)':'var(--bad)')+'">'+esc(T('Allocated {a} of {t} Birr',{a:fmt(a),t:fmt(tot)}))+'</p>';
 }
 function methodHtml(dir){
